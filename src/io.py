@@ -35,32 +35,34 @@ def read_image(path, max_size = 0, grayscale = False):
     return np.asarray(img)
 
 
-def image_set_reader(
-    img_dir, blank_glob = "blank.JPG", fly_glob = "IMG*.JPG",
-    verbose = False, **kwargs
-):
-    """Read and yield images from a set of images.
-    """
-    img_dir = Path(img_dir)
+class FlyDatasetReader:
+    def __init__(
+        self, data_dir, blank_glob = "blank*.JPG", fly_glob = "IMG*.JPG",
+        max_size = 0
+    ):
+        # Make sure there's a `photos/` directory.
+        photos_dir = Path(data_dir) / "photos"
+        if not photos_dir.is_dir():
+            raise FileNotFoundError(
+                f"Directory '{photos_dir}' does not exist.")
 
-    # Find the blank image.
-    blank_path = next(img_dir.glob(blank_glob))
-    if verbose:
-        print(f"Found blank image '{blank_path}'")
+        # Find the blank image.
+        self.blank_paths = sorted(photos_dir.glob(blank_glob))
+        self.fly_paths = sorted(photos_dir.glob(fly_glob))
+        self.max_size = max_size
 
-    # Find the other images.
-    fly_paths = sorted(img_dir.glob(fly_glob))
-    if verbose:
-        print(f"Found {len(fly_paths)} fly images")
+    def read_blank(self, **kwargs):
+        n_blank = len(self.blank_paths)
+        if n_blank > 1:
+            print(f"Found {n_blank} paths, returning first.")
 
-    # Read the images.
-    blank_img = read_image(blank_path, **kwargs)
-    if verbose:
-        print(f"Read '{blank_path}'")
-    yield blank_img
+        if "max_size" not in kwargs:
+            kwargs["max_size"] = self.max_size
+        return read_image(self.blank_paths[0], **kwargs)
 
-    for p in fly_paths:
-        fly_img = read_image(p, **kwargs)
-        if verbose:
-            print(f"Read '{p}'")
-        yield fly_img
+    def read_fly(self, index, **kwargs):
+        p = self.fly_paths[index]
+
+        if "max_size" not in kwargs:
+            kwargs["max_size"] = self.max_size
+        return read_image(p, **kwargs)

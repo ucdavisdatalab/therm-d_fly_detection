@@ -1,14 +1,14 @@
 """This module handles visualization.
 """
 
-from PIL import Image
+import cv2
 import matplotlib.pyplot as plt
 
 from src.io import rescale_image
 
 
 def show_image(
-    image, ax = None, grayscale = False, max_resolution = 1_000, **kwargs
+    image, ax = None, grayscale = False, max_size = 0, **kwargs
 ):
     """Display an image.
 
@@ -23,7 +23,7 @@ def show_image(
     grayscale: bool
         Whether to convert the image to grayscale before displaying.
 
-    max_resolution: int
+    max_size: int
         Maximum resolution for displayed image. If positive, the image is
         resized so that this is the length of its longest side. If
         non-positive, the image is displayed at full resolution. Using lower
@@ -35,12 +35,20 @@ def show_image(
     if ax is None:
         _, ax = plt.subplots(**kwargs)
 
-    image = Image.fromarray(image)
-    if max_resolution > 0:
-        image = rescale_image(image, max_resolution)
+    print(image.shape)
+    if max_size > 0:
+        print(max_size)
+        image = rescale_image(image, max_size)
 
-    if grayscale:
-        image = image.convert("L")
+    n_channels = 1
+    if len(image.shape) == 3:
+        n_channels = image.shape[-1]
+
+    if grayscale and n_channels == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        n_channels = 1
+
+    if n_channels == 1:
         ax.imshow(image, cmap = "gray")
     else:
         ax.imshow(image)

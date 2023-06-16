@@ -1,8 +1,7 @@
 """This module handles reading and writing data.
 """
 
-import numpy as np
-from PIL import Image
+import cv2
 
 from pathlib import Path
 
@@ -11,28 +10,32 @@ def rescale_image(image, max_size):
     """Rescale an image to a maximum size, preserving the aspect ratio.
     """
     # Determine which dimension to resize.
-    w, h = image.size
+    h, w = image.shape[:2]
+    m = max(w, h)
+    if m <= max_size:
+        return image
+
     scaling = max_size / max(w, h)
     w = int(round(w * scaling))
     h = int(round(h * scaling))
-    return image.resize((w, h))
+    return cv2.resize(image, (w, h))
 
 
 def read_image(path, max_size = 0, grayscale = False):
     """Read a single image.
     """
-    img = Image.open(path)
-
-    # Default to RGB if grayscale is not requested.
-    if grayscale and img.mode != "L":
-        img = img.convert("L")
-    elif img.mode != "RGB":
-        img = img.convert("RGB")
+    path = str(path)
+    if grayscale:
+        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    else:
+        img = cv2.imread(path)
+        # OpenCV defaults to BGR for color images, but other tools expect RGB.
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     if max_size > 0:
         img = rescale_image(img, max_size)
 
-    return np.asarray(img)
+    return img
 
 
 class FlyDatasetReader:

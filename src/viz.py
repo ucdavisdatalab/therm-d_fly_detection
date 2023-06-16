@@ -2,6 +2,7 @@
 """
 
 import cv2
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from src.io import rescale_image
@@ -52,5 +53,35 @@ def show_image(
         ax.imshow(image, cmap = "gray")
     else:
         ax.imshow(image)
+
+    return ax
+
+
+def draw_box(coordinates, ax = None, **kwargs):
+    """Draw a box on a plot.
+
+    Arguments
+    ---------
+    coordinates: tuple
+        The box coordinates as top, left, bottom, right.
+
+    ax: matplotlib.axes._axes.Axes
+        Matplotlib axes on which to display the box.
+
+    **kwargs
+        Additional arguments passed on to matplotlib.patches.Rectangle.
+    """
+    if ax is None:
+        _, ax = plt.subplots()
+
+    if "facecolor" not in kwargs:
+        kwargs["facecolor"] = "none"
+    if "edgecolor" not in kwargs:
+        kwargs["edgecolor"] = "#FF0000"
+
+    t, l, b, r = coordinates
+    box = mpl.patches.Rectangle(
+        (l, t), width = r - l, height = b - t, **kwargs)
+    ax.add_patch(box)
 
     return ax

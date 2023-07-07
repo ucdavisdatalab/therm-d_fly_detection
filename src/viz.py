@@ -57,6 +57,41 @@ def show_image(
     return ax
 
 
+def plot_image_grid(*args, nrow = None, ncol = None, axs = None, **kwargs):
+    """Plot a grid of images.
+
+    Parameters
+    ----------
+    *args: lists of images
+        Lists of images to plot; each argument is plotted on a separate row.
+    axs: list of Axes
+        Axes on which to plot the images.
+    """
+    nrow = len(args) if nrow is None else nrow
+    ncol = max(len(a) for a in args) if ncol is None else ncol
+
+    if axs is None:
+        _, axs = plt.subplots(
+            nrow, ncol, squeeze = False, layout = "constrained", **kwargs)
+
+    for i in range(nrow):
+        row = args[i]
+        for j in range(len(row)):
+            img = row[j]
+            ax = axs[i][j]
+
+            match img:
+                case dict() as img:
+                    show_image(img.img, ax)
+                    ax.set_title(img.title)
+                case _:
+                    show_image(img, ax)
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+    return axs
+
+
 def draw_box(coordinates, ax = None, **kwargs):
     """Draw a box on a plot.
 

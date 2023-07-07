@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from src.io import rescale_image
 
 
-def show_image(
+def plot_image(
     image, ax = None, grayscale = False, max_size = 0, **kwargs
 ):
     """Display an image.
@@ -82,17 +82,17 @@ def plot_image_grid(*args, nrow = None, ncol = None, axs = None, **kwargs):
 
             match img:
                 case dict() as img:
-                    show_image(img.img, ax)
+                    plot_image(img.img, ax)
                     ax.set_title(img.title)
                 case _:
-                    show_image(img, ax)
+                    plot_image(img, ax)
             ax.set_xticks([])
             ax.set_yticks([])
 
     return axs
 
 
-def draw_box(coordinates, ax = None, **kwargs):
+def plot_box(coordinates, ax = None, **kwargs):
     """Draw a box on a plot.
 
     Arguments
@@ -112,7 +112,7 @@ def draw_box(coordinates, ax = None, **kwargs):
     if "facecolor" not in kwargs:
         kwargs["facecolor"] = "none"
     if "edgecolor" not in kwargs:
-        kwargs["edgecolor"] = "#FF0000"
+        kwargs["edgecolor"] = "#00FF00"
 
     t, l, b, r = coordinates
     box = mpl.patches.Rectangle(

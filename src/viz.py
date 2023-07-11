@@ -36,9 +36,7 @@ def plot_image(
     if ax is None:
         _, ax = plt.subplots(**kwargs)
 
-    print(image.shape)
     if max_size > 0:
-        print(max_size)
         image = rescale_image(image, max_size)
 
     n_channels = 1

@@ -54,6 +54,9 @@ class FlyDatasetReader:
         self.fly_paths = sorted(photos_dir.glob(fly_glob))
         self.max_size = max_size
 
+    def __len__(self):
+        return len(self.fly_paths)
+
     def read_blank(self, **kwargs):
         n_blank = len(self.blank_paths)
         if n_blank > 1:

@@ -35,3 +35,36 @@ The files in the `data/` directory are:
 
 ```
 -->
+
+## Notebooks
+
+Jupyter notebooks are stored in the repo in Markdown format (`.md`) via
+[Jupytext][]. This makes it easier to see changes to the notebooks in version
+control and also avoids committing large images to the repo.
+
+The conda environments in the repo include Jupytext. Make sure one is installed
+and active before running the commands below.
+
+[Jupytext]: https://jupytext.readthedocs.io/en/latest/
+
+To convert all `.ipynb` files to `.md`, run this command in the `notebooks/`
+directory:
+
+```sh
+jupytext --to md *.ipynb
+```
+
+You can replace `*.ipynb` with a specific file name if you only want to convert
+one file.
+
+To convert `.md` to `.ipynb`, run this command:
+
+```sh
+jupytext --to ipynb *.md
+```
+
+See the [Jupytext CLI docs][jupytext-cli] for more info. There is also a
+Jupytext extension for JupyterLab that can handle this process automatically.
+
+[jupytext-cli]: https://jupytext.readthedocs.io/en/latest/using-cli.html
+

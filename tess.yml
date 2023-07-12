@@ -1,15 +1,12 @@
-name: fly
+name: tess
 channels:
 - conda-forge
 dependencies:
-- ipdb
 - ipython
 - jupyterlab
 - jupytext
 - matplotlib
-- numpy
 - opencv
 - pandas
-- pillow
-- python
+- pytesseract
 

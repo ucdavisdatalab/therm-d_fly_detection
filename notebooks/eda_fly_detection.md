@@ -61,5 +61,5 @@ s_blank = shiny.read_blank()
 ```
 
 ```python
-plot_image_grid([blank, img0, s_blank], figsize = (15, 10))
+plot_image_grid([blank, img0, s_blank], figsize = (15, 10)) #hello
 ```

@@ -48,6 +48,32 @@ and active before running the commands below.
 
 [Jupytext]: https://jupytext.readthedocs.io/en/latest/
 
+Whenever you create a new Jupyter notebook, say `notebook.ipynb`, run this
+command to make it a **paired notebook** and generate a corresponding
+`notebook.md` file:
+
+```sh
+jupytext --set-formats 'ipynb,md' notebook.ipynb
+```
+
+The `notebook.md` file is the one to commit to the repo. Once a notebook is
+paired, the two files will automatically be kept in sync as long as you run
+Jupyter in an environment that has Jupytext installed.
+
+If you over need to manually sync a paired notebook, the command is:
+
+```sh
+jupytext --sync notebook.ipynb
+```
+Be careful when doing this, because if you've somehow ended up with changes to
+both `notebook.ipynb` and `notebook.md`, the older changes will be overwritten!
+
+
+### Additional Jupytext Commands
+
+You generally won't need to run these if you've followed the instructions
+above.
+
 To convert all `.ipynb` files to `.md`, run this command in the `notebooks/`
 directory:
 

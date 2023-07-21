@@ -1,6 +1,7 @@
 ---
 jupyter:
   jupytext:
+    formats: ipynb,md
     text_representation:
       extension: .md
       format_name: markdown
@@ -107,7 +108,7 @@ pyt.image_to_osd(transformed, lang = "eng", config = r"digits")
 ```
 
 ```python
-tsconfig = r"--psm 11 digits"
+tsconfig = r"" #r"--psm 11 digits"
 boxes = pyt.image_to_data(
     transformed, lang = "eng", output_type = "data.frame", config = tsconfig)
 boxes.head()

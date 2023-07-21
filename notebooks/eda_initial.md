@@ -1,6 +1,7 @@
 ---
 jupyter:
   jupytext:
+    formats: ipynb,md
     text_representation:
       extension: .md
       format_name: markdown
@@ -71,13 +72,11 @@ s_blank = shiny.read_blank()
 plot_image(s_blank)
 ```
 
-<!-- #region jp-MarkdownHeadingCollapsed=true -->
 ## Template Matching
 
 Template matching searches for one image (the "template") within another. For
 this problem, the template is a manually cropped ruler from one of the fly
 apparatus photos.
-<!-- #endregion -->
 
 ```python
 template = blank[910:980, 270:1290]

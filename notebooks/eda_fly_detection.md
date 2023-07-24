@@ -120,13 +120,17 @@ template.shape[::-1]
 ```
 
 ```python
-matching_result 
+match 
 print(max_loc)
-cv2.minMaxLoc(matching_result)
+cv2.minMaxLoc(match)
 
 ```
 
 ```python
+target_image = arena
+template_image = template
+matching_result = cv2.matchTemplate(arena, template, cv2.TM_CCOEFF_NORMED)
+
 k = 100000  # Adjust k as needed
 match_locations = []
 for _ in range(k):
@@ -156,12 +160,6 @@ for match_loc in match_locations:
 # Show the plot
 plt.show()
 
-
-
-
-
-
-
 ```
 
 ```python
@@ -179,7 +177,6 @@ img_gray = cv.cvtColor(arena, cv.COLOR_BGR2GRAY)
 temp_gray = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
 h, w = temp_gray.shape
 
-
 res = cv.matchTemplate(img_gray,temp_gray,cv.TM_CCOEFF_NORMED)
 threshold = 0.8
 loc = np.where( res >= threshold)
@@ -196,5 +193,12 @@ plt.show()
 
 # Display the target image
 #ax.imshow('res.png', cv.IMREAD_COLOR)
+```
 
+```python
+img_gray = cv.cvtColor(arena, cv.COLOR_BGR2GRAY)
+temp_gray = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
+h, w = temp_gray.shape
+
+res = cv.matchTemplate(img_gray,temp_gray,cv.TM_CCOEFF_NORMED)
 ```

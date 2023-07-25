@@ -116,49 +116,9 @@ if max_val >= threshold:
 ```
 
 ```python
-template.shape[::-1]
-```
-
-```python
 match 
 print(max_loc)
 cv2.minMaxLoc(match)
-
-```
-
-```python
-target_image = arena
-template_image = template
-matching_result = cv2.matchTemplate(arena, template, cv2.TM_CCOEFF_NORMED)
-
-k = 100000  # Adjust k as needed
-match_locations = []
-for _ in range(k):
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(matching_result)
-    if max_val >= 0.8:
-        match_locations.append(max_loc)
-        matching_result[max_loc[1]:max_loc[1]+template_image.shape[0], max_loc[0]:max_loc[0]+template_image.shape[1]] = -1
-
-# Convert target image from BGR to RGB (Matplotlib uses RGB)
-target_image_rgb = cv2.cvtColor(target_image, cv2.COLOR_BGR2RGB)
-
-# Create a figure and axes to display the target image
-fig, ax = plt.subplots()
-
-# Display the target image
-ax.imshow(target_image_rgb)
-
-# Draw rectangles around the top k matches
-h, w, _ = template_image.shape
-for match_loc in match_locations:
-    top_left = match_loc
-    rect = patches.Rectangle(top_left, w, h, linewidth=2, edgecolor='g', facecolor='none')
-    ax.add_patch(rect)
-
-# Set the title and turn off the axis labels
-
-# Show the plot
-plt.show()
 
 ```
 
@@ -189,10 +149,67 @@ plt.imshow(mat)
 plt.title("RGB Image")
 plt.axis("off")  # Turn off axis
 plt.show()
-#fig, ax = plt.subplots()
 
 # Display the target image
 #ax.imshow('res.png', cv.IMREAD_COLOR)
+```
+
+## K Best template matches
+
+```python
+target_image = arena
+template_image = template
+matching_result = cv2.matchTemplate(arena, template, cv2.TM_CCOEFF_NORMED)
+h, w, channels = template_image.shape
+
+k = 10 # Number of k flies
+match_locations = [] #list to append location of matc
+for i in range(k): #loops through number of flies
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(matching_result) #looks at the location of match
+    match_locations.append(max_loc) #adds that location to the list
+    matching_result[max_loc[1] - round(.5*h) :max_loc[1] + round(.5*h), max_loc[0] - round(.5*w) :max_loc[0] + round(.5*w)] = -1 #change the values at the location to 0
+
+fig, ax = plt.subplots()
+
+ax.imshow(target_image)
+
+for match_loc in match_locations:
+    top_left = match_loc
+    rect = patches.Rectangle(top_left, w, h, linewidth=1, edgecolor='g', facecolor='none')
+    ax.add_patch(rect)
+
+plt.show()
+```
+
+```python
+round(.5*h)
+```
+
+```python
+
+```
+
+```python
+target_image = arena
+template_image = template
+matching_result = cv2.matchTemplate(arena, template, cv2.TM_CCOEFF_NORMED)
+template.shape
+```
+
+```python
+matching_result[max_loc[1]:max_loc[1] + h, max_loc[0]:max_loc[0] + w]
+```
+
+```python
+test = arena[max_loc[1]:max_loc[1] + h, max_loc[0]:max_loc[0] + w]
+
+```
+
+```python
+print(match_locations[0])
+match_locations[1]
+
+matching_result[936,415]
 ```
 
 ```python

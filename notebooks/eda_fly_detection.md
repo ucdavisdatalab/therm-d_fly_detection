@@ -80,10 +80,12 @@ Loop that generates all img and arenas
 for i in range(0,23):
     locals()['img' + str(i)] = biden.read_fly(i)
     locals()['arena' + str(i)] = biden.read_fly(i)[1400:3750, 1100:5400]    
+
+#img = [biden.read_fly(i)] for i in range(23)
 ```
 
 ```python
-template = arena0[2255:2295, 385:434]
+template = arena0[2250:2300, 385:435]
 plot_image(template)
 
 template.shape
@@ -91,8 +93,10 @@ template.shape
 
 ```python
 import PIL
+from PIL import Image
 
-templateP = PIL.Image.fromarray(template).rotate(45)
+templateP = PIL.Image.fromarray(template)
+templateP = templateP.rotate(45)
 templateR = np.array(templateP)
 
 plot_image(templateR)
@@ -141,7 +145,7 @@ plot_image(arena)
 
 This uses mario coins method to try to template match the flies
 
-```python
+
 import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
@@ -165,7 +169,6 @@ plt.axis("off")  # Turn off axis
 
 # Display the target image
 #ax.imshow('res.png', cv.IMREAD_COLOR)
-```
 
 ```python
 arena = arena0
@@ -178,8 +181,8 @@ arena = arena0
 matching_result = cv2.matchTemplate(arena, template, cv2.TM_CCOEFF_NORMED)
 h, w, channels = template.shape
 
-k = 10 #Number of k flies
-match_locations = [] #list to append location of matc
+k = 25 #Number of k flies
+match_locations = [] #list to append location of match
 for i in range(k): #loops through number of flies
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(matching_result) #looks at the location of match
     match_locations.append(max_loc) #adds that location to the list
@@ -195,6 +198,9 @@ for match_loc in match_locations:
     ax.add_patch(rect)
 
 plt.show()
+
+#draw box does this
+#plot box 
 ```
 
 ## Rotating and applying template match
@@ -203,13 +209,18 @@ plt.show()
 #templateR = np.rot90(template, 1) #rotate template by 90 the number of times can't be by .5 think it rounds to next whole number
 #templateP = PIL.Image.fromarray(template)
 
-templateP = PIL.Image.fromarray(template).rotate(45) #change from np to pil image and rotate not a good way to do it
+import PIL
+from PIL import Image
+import matplotlib.patches as patches
+
+
+templateP = PIL.Image.fromarray(template).rotate(90) #change from np to pil image and rotate not a good way to do it
 #could remedy this potentially by setting all black parts of the picture and setting it to the gray
 templateR = np.array(templateP) #change back to np
 matching_result = cv2.matchTemplate(arena, templateR, cv2.TM_CCOEFF_NORMED)
 h, w, channels = templateR.shape
 
-k = 10 # Number of k flies
+k = 25 # Number of k flies
 match_locations = [] #list to append location of matc
 for i in range(k): #loops through number of flies
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(matching_result) #looks at the location of match
@@ -229,11 +240,11 @@ plt.show()
 ```
 
 ```python
-templateR = cv2.rotate(template, cv2.ROTATE_180)
+templateR = cv2.rotate(template, cv2.ROTATE_90_COUNTERCLOCKWISE)
 matching_result = cv2.matchTemplate(arena, templateR, cv2.TM_CCOEFF_NORMED)
 h, w, channels = template.shape
 
-k = 10 # Number of k flies
+k = 25 # Number of k flies
 match_locations = [] #list to append location of matc
 for i in range(k): #loops through number of flies
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(matching_result) #looks at the location of match
@@ -250,35 +261,4 @@ for match_loc in match_locations:
     ax.add_patch(rect)
 
 plt.show()
-```
-
-```python
-target_image = arena
-template_image = template
-matching_result = cv2.matchTemplate(arena, template, cv2.TM_CCOEFF_NORMED)
-template.shape
-```
-
-```python
-matching_result[max_loc[1]:max_loc[1] + h, max_loc[0]:max_loc[0] + w]
-```
-
-```python
-test = arena[max_loc[1]:max_loc[1] + h, max_loc[0]:max_loc[0] + w]
-
-```
-
-```python
-print(match_locations[0])
-match_locations[1]
-
-matching_result[936,415]
-```
-
-```python
-img_gray = cv.cvtColor(arena, cv.COLOR_BGR2GRAY)
-temp_gray = cv.cvtColor(template, cv.COLOR_BGR2GRAY)
-h, w = temp_gray.shape
-
-res = cv.matchTemplate(img_gray,temp_gray,cv.TM_CCOEFF_NORMED)
 ```

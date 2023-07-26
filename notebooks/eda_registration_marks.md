@@ -39,6 +39,7 @@ import numpy as np
 
 from src.io import *
 from src.match import *
+from src.registration import *
 from src.viz import *
 ```
 
@@ -52,10 +53,16 @@ blank.shape
 ```
 
 ```python
-plot_image(blank, figsize = (10, 10))
+plot_image(blank)
 ```
 
-## Preprocessing (Color Thresholding)
+```python
+biden = FlyDatasetReader("../data/2023-07-14_biden/", fly_glob = "*.JPG")#, max_size = 1_500)
+biden1 = biden.read_fly(0)
+plot_image(biden1)
+```
+
+## Color Thresholding
 
 Hue-saturation-value (HSV) typically records hue as angles along a color wheel,
 from 0 to 360 degrees. 0 is pure red, 120 is pure green, and 240 is pure blue.
@@ -64,149 +71,92 @@ fit within 8 bits).
 
 ```python
 # Find green pixels.
-def find_color_shapes(
-    image, min_h = 60, max_h = 120, kernel_size = 5
-):
-    """Mask all pixels except those in a specific hue range.
-    """
-    image_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-    #mask = cv2.inRange(image_hsv, (min_h, 30, 127), (max_h, 255, 255))
-    mask = cv2.inRange(image_hsv, (min_h, 127, 127), (max_h, 255, 255))
+#image, min_h = 60, max_h = 120, kernel_size = 5
+#mask = cv2.inRange(image_hsv, (min_h, 30, 127), (max_h, 255, 255))
+#mask = cv2.inRange(image_hsv, (min_h, 127, 127), (max_h, 255, 255))
 
-    # Use close op to close holes, then open op to remove noise.
-    kernel_size = (kernel_size, kernel_size)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, kernel_size)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    return cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-
-
-result = find_color_shapes(blank)
-plot_image(result, figsize = (10, 10))
+masked = mask_hsv(biden1, (60, 50, 127), (120, 255, 255), close_kernel = 11)
+plot_image(masked, figsize = (10, 10))
 ```
 
 ```python
-def find_squares(mask, k = 3, min_area_pct = 0.0001, max_area_pct = 0.1):
-    """Find k squares within a given mask.
-    """
-    contours, _ = cv2.findContours(
-        mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    h, w = mask.shape[:2]
-    m_area = h * w
-    print(f"{h=}, {w=}")
-
-    # Drop contours with areas too small or large.
-    # Compute contour areas and drop contours with area less than 1.
-    area = np.array([cv2.contourArea(con) for con in contours])
-    ok_area = (m_area * min_area_pct < area) & (area < m_area * max_area_pct)
-    contours = [x for i, x in enumerate(contours) if ok_area[i]]
-    area = area[ok_area]
-
-    # Sort by area (largest to smallest).
-    ix = np.argsort(-area)
-    area = area[ix]
-    contours = [contours[i] for i in ix]
-
-    # TODO: check in case there are < 3 contours.
-
-    # Find k contours with similar areas by finding the lowest-variance
-    # k-sequence.
-    std = [np.std(area[i:i+k]) for i in range(len(area) - k + 1)]
-    ix = np.argmin(std)
-    area = area[ix:ix+k]
-    contours = contours[ix:ix+k]
-
-    # Simplify the contours.
-    # NOTE: We could also check that the simplified contours have 4 corners.
-    # NOTE: Or check aspect ratio of bounding box is near 1.
-    contours = [
-        cv2.approxPolyDP(x, 0.05 * cv2.arcLength(x, True), True)
-        for x in contours]
-
-    contours = [np.squeeze(x) for x in contours]
-
-    return contours, area
-```
-
-```python
-# Use 3 detected squares to find the fly arena and transform it to a rectangle.
-def arg_nearest_pair(x):
-    ix = np.argsort(x)
-    best = np.argmin(np.diff(x[ix]))
-    return ix[best:best+2]
-
-
-def find_edges(contours):
-    # Determine which two boxes are aligned horizontally and which two are
-    # aligned vertically.
-    x_means = np.array([c[:, 0].mean() for c in contours])
-    x_aligned = [contours[i] for i in arg_nearest_pair(x_means)]
-
-    y_means = np.array([c[:, 1].mean() for c in contours])
-    y_aligned = [contours[i] for i in arg_nearest_pair(y_means)]
-
-    # Compute bottom-leftmost, top-leftmost, top-rightmost, bottom-rightmost
-    # corners for these contours.
-    # Get bottom-leftmost of each contour, then get bottom-leftmost of those.
-    tl = contours[0][0, :]
-    bl = contours[0][1, :]
-    br = contours[0][2, :]
-    tr = contours[0][3, :]
-    for c in contours[1:]:
-        if (c[0, :] < tl).any():
-            tl = c[0, :]
-        if c[1, 0] < bl[0] or c[1, 1] > bl[1]:
-            bl = c[1, :]
-        if c[2, 0] > br[0] or c[2, 1] > br[1]:
-            br = c[2, :]
-        if c[3, 0] > tr[0] or c[3, 1] < tr[1]:
-            tr = c[3, :]
-    return contours, np.stack([tl, bl, br, tr])
-
-z, coords = find_edges(squares)
-print(z)
-
-contoured = cv2.drawContours(blank.copy(), [coords], -1, (0, 255, 0), 1)
-plot_image(contoured, figsize = (5, 5))
-print(coords)
-```
-
-```python
-squares, _ = find_squares(result)
-#print(squares)
-contoured = cv2.drawContours(blank.copy(), squares, -1, (255, 0, 0), 1)
-plot_image(contoured, figsize = (15, 15))
-```
-
-### Second Example
-
-```python
-biden = FlyDatasetReader("../data/2023-07-14_biden/", fly_glob = "*.JPG", max_size = 1_500)
-biden1 = biden.read_fly(0)
-plot_image(biden1)
-```
-
-```python
-result = find_color_shapes(biden1)
-squares, _ = find_squares(result)
-#print(squares)
-contoured = cv2.drawContours(biden1.copy(), squares, -1, (255, 0, 0), 1)
+squares, _ = compute_squares(masked, 3)
+contoured = cv2.drawContours(biden1.copy(), squares, -1, (0, 255, 0), 2)
 plot_image(contoured, figsize = (15, 15))
 ```
 
 ```python
-result = find_color_shapes(biden1, min_h = 5, max_h = 20, kernel_size = 21)
-#squares, _ = find_squares(result)
-plot_image(result)
-#print(squares)
-#contoured = cv2.drawContours(biden1.copy(), squares, -1, (255, 0, 0), 1)
-#plot_image(contoured, figsize = (15, 15))
+masked_orange = mask_hsv(biden1, (5, 50, 127), (20, 255, 255), close_kernel = 11)
+#plot_image(masked_orange)
+
+squares_orange, _ = compute_squares(masked_orange, 1)
+contoured = cv2.drawContours(biden1.copy(), squares_orange, -1, (255, 0, 0), 2)
+plot_image(contoured, figsize = (15, 15))
 ```
 
+Given 3 green contours and 1 orange contour, determine the orientation of the
+image and the arena bounding box.
+
+In a correctly oriented image, the orange square should be at the top left
+corner.
+
+```python
+def orient_and_bound(green, orange):
+    # Compute median center of each square and thereby determine which the
+    # orange square's corner.
+    contours = [orange] + green
+    m = np.stack([np.median(c, axis = 0) for c in contours])
+    mark_corners = arg_corner_sort(m)
+
+    match np.where(mark_corners == 0)[0]:
+        case 0: # in tl
+            orient = None
+        case 1: # in tr
+            orient = cv2.ROTATE_90_COUNTERCLOCKWISE
+        case 2: # in br
+            orient = cv2.ROTATE_180
+        case 3: # in bl
+            orient = cv2.ROTATE_90_CLOCKWISE
+
+    # Next, find the bound of the arena.
+    # Strategy: get top-left corner of top-left contour, etc...
+    bound = np.empty_like(contours[0])
+    for i, ix in enumerate(mark_corners):
+        contour = contours[ix]
+        corners = arg_corner_sort(contour)
+        bound[i, :] = contour[corners[i]]
+    
+    return contours, mark_corners, orient, bound
+
+z = orient_and_bound(squares, squares_orange[0])
+z
+```
+
+```python
+bound = z[3]
+bound
+contoured = cv2.drawContours(biden1.copy(), [bound], -1, (255, 0, 0), 2)
+plot_image(contoured, figsize = (15, 15))
+```
+
+```python
+cv2.boundingRect(bound)
+```
+
+Perspective Correction
+
+Compute distances of bounding box sides and use that as the new image size.
+Then make a perspective correction with `cv2.warpPerspective`.
+
+```python
+
+```
+
+<!-- #region jp-MarkdownHeadingCollapsed=true -->
 ## Template Matching
 
 How well will the registration marks work with template matching?
+<!-- #endregion -->
 
 ```python
 mark = blank[380:400, 258:278]
@@ -220,10 +170,6 @@ loc = extract_match(blank, mark, cv2.TM_CCOEFF)
 ax = plot_image(blank)
 plot_box(loc, ax)
 ```
-
-## Color Detection
-
-Can we detect the marks by color?
 
 ```python
 

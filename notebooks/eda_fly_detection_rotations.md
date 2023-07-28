@@ -42,7 +42,7 @@ import numpy as np
 
 from src.io import *
 from src.match import *
-from src.ops import *
+import src.ops as ops
 #from src.tsops import *
 from src.viz import *
 ```
@@ -56,23 +56,8 @@ img0 = biden.read_fly(0)
 ## Rotation
 
 ```python
-def rotate_image(image, angle):
-    """Rotate an image by an arbitrary angle.
-    """
-    # Based on https://stackoverflow.com/a/9042907/1166039
-    # Get center of image.
-    dims = image.shape[1::-1] # cols, rows
-    center = np.array(dims) / 2
-    # Third rotation matrix argument is scale.
-    rotation = cv2.getRotationMatrix2D(center, angle, 1.0)
-    return cv2.warpAffine(image, rotation, dims, flags = cv2.INTER_LINEAR)
-
-foo = rotate_image(img0, 45)
+foo = ops.rotate(img0, 45)
 plot_image(foo)
-```
-
-```python
-img0.shape[1::-1]
 ```
 
 ```python
@@ -95,7 +80,7 @@ plot_box((124, 124, 125, 125), ax)
 ```python
 angles = range(45, 360, 15)
 rotations = [template[100:150, 100:150]]
-rotations += [rotate_image(template, a)[100:150, 100:150] for a in angles]
+rotations += [ops.rotate(template, a)[100:150, 100:150] for a in angles]
 plot_image_grid(rotations)
 ```
 

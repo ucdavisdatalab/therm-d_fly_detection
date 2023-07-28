@@ -2,9 +2,31 @@
 """
 
 import cv2
+import numpy as np
 
 
-def unsharp_mask(img, sigma, size = (0, 0)):
+def rotate(image, angle, flags = cv2.INTER_LINEAR):
+    """Rotate an image counterclockwise by an arbitrary angle.
+
+    Arguments
+    ---------
+    image: numpy.ndarray
+        The image to rotate.
+
+    angle: float
+        The angle to rotate counterclockwise in degrees.
+    """
+    # Based on https://stackoverflow.com/a/9042907/1166039
+    # Get center of image.
+    dims = image.shape[1::-1]  # cols, rows
+    center = np.array(dims) / 2
+
+    # Third rotation matrix argument is scale.
+    rotation = cv2.getRotationMatrix2D(center, angle, 1.0)
+    return cv2.warpAffine(image, rotation, dims, flags = flags)
+
+
+def unsharp_mask(image, sigma, size = (0, 0)):
     """Apply an unsharp mask to an image.
 
     An unsharp mask is a kind of high-pass filter, meaning it preserves
@@ -14,7 +36,7 @@ def unsharp_mask(img, sigma, size = (0, 0)):
 
     Arguments
     ---------
-    img:
+    image: numpy.ndarray
         The image to which to apply the filter.
 
     sigma: float
@@ -24,5 +46,5 @@ def unsharp_mask(img, sigma, size = (0, 0)):
         The width and height of the kernel. Computed from sigma if both are 0;
         otherwise both must be odd.
     """
-    blurred = cv2.GaussianBlur(img, size, sigma)
-    return cv2.addWeighted(img, 2.0, blurred, -1.0, 0.0)
+    blurred = cv2.GaussianBlur(image, size, sigma)
+    return cv2.addWeighted(image, 2.0, blurred, -1.0, 0.0)

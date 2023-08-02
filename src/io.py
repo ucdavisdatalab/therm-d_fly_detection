@@ -27,18 +27,58 @@ def read_image(path, max_size = 0, grayscale = False):
 
 class FlyDatasetReader:
     def __init__(
-        self, data_dir, blank_glob = "blank*.JPG", fly_glob = "IMG*.JPG",
-        max_size = 0
+        self, data_dir, glob = "*", suffixes = [".jpg", ".jpeg"], max_size = 0
+        , blank_pattern = "blank"
     ):
+        """Create a new FlyDataSetReader.
+
+        Arguments
+        ---------
+        data_dir: str or pathlib.Path
+            Path to the data set directory. The data set directory should
+            contain a directory named "photos/" which contains the images.
+
+        glob: str
+            Case-sensitive glob string to filter files in the `photos/`
+            directory.
+
+        suffixes: list of str
+            Case-insensitive filename suffixes to further filter files in the
+            `photos/` directory *after* globbing. These should include the dot,
+            as in `.jpg`.
+
+        max_size: int
+            Maximum side length for images. Images larger than this will be
+            rescaled so that the longest side has this length. If this is not
+            positive (the default), images will not be rescaled.
+
+        blank_pattern: str
+            Case-insensitive pattern for "blank" no-flies images.
+        """
         # Make sure there's a `photos/` directory.
         photos_dir = Path(data_dir) / "photos"
         if not photos_dir.is_dir():
             raise FileNotFoundError(
                 f"Directory '{photos_dir}' does not exist.")
 
-        # Find the blank image.
-        self.blank_paths = sorted(photos_dir.glob(blank_glob))
-        self.fly_paths = sorted(photos_dir.glob(fly_glob))
+        # Get all images.
+        suffixes = [s.lower() for s in suffixes]
+        blank_paths = []
+        fly_paths = []
+        for p in photos_dir.glob(glob):
+            # Ignore files with incorrect suffixes.
+            if p.suffix.lower() not in suffixes:
+                continue
+
+            # Check whether filename contains pattern for "blank" no flies
+            # images.
+            if blank_pattern and blank_pattern in p.stem.lower():
+                blank_paths.append(p)
+            else:
+                fly_paths.append(p)
+
+        self.blank_paths = sorted(blank_paths)
+        self.fly_paths = sorted(fly_paths)
         self.max_size = max_size
 
     def __len__(self):

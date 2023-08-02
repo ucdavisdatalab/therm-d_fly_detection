@@ -3,22 +3,9 @@
 
 import cv2
 
+from .ops import rescale
+
 from pathlib import Path
-
-
-def rescale_image(image, max_size):
-    """Rescale an image to a maximum size, preserving the aspect ratio.
-    """
-    # Determine which dimension to resize.
-    h, w = image.shape[:2]
-    m = max(w, h)
-    if m <= max_size:
-        return image
-
-    scaling = max_size / max(w, h)
-    w = int(round(w * scaling))
-    h = int(round(h * scaling))
-    return cv2.resize(image, (w, h))
 
 
 def read_image(path, max_size = 0, grayscale = False):
@@ -33,7 +20,7 @@ def read_image(path, max_size = 0, grayscale = False):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     if max_size > 0:
-        img = rescale_image(img, max_size)
+        img = rescale(img, max_size)
 
     return img
 

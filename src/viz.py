@@ -5,7 +5,7 @@ import cv2
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from src.io import rescale_image
+from .ops import rescale
 
 
 def plot_image(
@@ -37,7 +37,7 @@ def plot_image(
         _, ax = plt.subplots(**kwargs)
 
     if max_size > 0:
-        image = rescale_image(image, max_size)
+        image = rescale(image, max_size)
 
     n_channels = 1
     if len(image.shape) == 3:

@@ -48,3 +48,18 @@ def unsharp_mask(image, sigma, size = (0, 0)):
     """
     blurred = cv2.GaussianBlur(image, size, sigma)
     return cv2.addWeighted(image, 2.0, blurred, -1.0, 0.0)
+
+
+def rescale(image, max_size):
+    """Rescale an image to a maximum size, preserving the aspect ratio.
+    """
+    # Determine which dimension to resize.
+    h, w = image.shape[:2]
+    m = max(w, h)
+    if m <= max_size:
+        return image
+
+    scaling = max_size / max(w, h)
+    w = int(round(w * scaling))
+    h = int(round(h * scaling))
+    return cv2.resize(image, (w, h))

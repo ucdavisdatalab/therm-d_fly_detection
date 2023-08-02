@@ -41,7 +41,7 @@ import cv2
 import numpy as np
 
 from src.io import *
-from src.match import *
+import src.match as match
 import src.ops as ops
 #from src.tsops import *
 from src.viz import *
@@ -95,66 +95,48 @@ img16a = img16[1470:3750, 1070:5350]
 plot_image(img16a)
 ```
 
+### SQDIFF_NORMED
+
 ```python
-def extract_matches(image, template, thresh = 0.85, n_max = 100):
-    """Extract multiple matches of a template from an image.
-
-    Arguments
-    ---------
-    image
-        The image from which to extract matches.
-
-    template
-        The template to search for in the image.
-
-    thresh
-        The similarity threshold for matches.
-
-    n_max
-        The maximum number of matches to return.
-    """
-    similarity = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
-    h, w = template.shape[:2]
-    w_shift = np.array([-w, w]) / 2
-    h_shift = np.array([-h, h]) / 2
-    # Print 99.9th percentile, median, and mean.
-    print(f"{np.percentile(similarity, 99.9)} {np.median(similarity)} {np.mean(similarity)}")
-
-    # Find up to n_max matches.
-    #matches = []
-    locs = np.zeros((n_max, 4), dtype = np.int32)
-    vals = np.zeros(n_max)
-    for i in range(n_max):
-        # Find location of current best match.
-        # Locations are top left corner of match.
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(similarity)
-        # Stop if best match's similarity is below threshold.
-        if max_val < thresh:
-            i -= 1
-            break
-        # Otherwise, add the location to the list.
-        vals[i] = max_val
-        x, y = max_loc
-        locs[i, :] = (y, x, y + h, x + w)
-        # Change the values in the matching location's box to -1.
-        # NOTE: We might want to leave edges intact in case flies are standing
-        # close together.
-        similarity[y:y + h, x:x + h] = -1
-
-    return locs[:i + 1, :], vals[:i + 1]
+locs, scores = match.concatenate(
+    [match.extract(
+        img0a, r, n_max = 50, threshold = 0.9999, adaptive = True
+        , verbose = True, metric = cv2.TM_SQDIFF_NORMED)
+     for r in rotations])
+len(scores)
 ```
 
 ```python
-def concatenate_matches(matches):
-    return [np.concatenate(x) for x in zip(*matches)]
+ax = plot_image(img0a, figsize = (15, 15))
 
-locs, vals = concatenate_matches(
-    [extract_matches(img0a, r) for r in rotations])
-len(vals)
+for i in range(locs.shape[0]):
+    plot_box(locs[i, :], ax)
+```
+
+### CCORR_NORMED
+
+```python
+locs, scores = match.concatenate(
+    [match.extract(
+        img0a, r, n_max = 100, threshold = 0.96
+        , verbose = True, metric = cv2.TM_CCORR_NORMED)
+     for r in rotations])
+len(scores)
 ```
 
 ```python
-rotations[0].shape
+ax = plot_image(img0a, figsize = (15, 15))
+
+for i in range(locs.shape[0]):
+    plot_box(locs[i, :], ax)
+```
+
+### CCOEFF_NORMED
+
+```python
+locs, scores = match.concatenate(
+    [match.extract(img0a, r, verbose = True) for r in rotations])
+len(scores)
 ```
 
 ```python
@@ -170,10 +152,6 @@ When several boxes have a large overlap, ignore all but the box with the
 highest score.
 
 ```python
-locs
-```
-
-```python
 def fast_iou(a, b, area):
     # Find intersection area.
     h = min(a[2], b[2]) - max(a[0], b[0])
@@ -184,7 +162,7 @@ def fast_iou(a, b, area):
 # See:
 #    https://learnopencv.com/non-maximum-suppression-theory-and-implementation-in-pytorch/
 # Iterate on selecting the best match and removing high IoU boxes.
-candidates = np.argsort(vals)  # smallest to largest
+candidates = np.argsort(scores)  # smallest to largest
 kept = np.zeros_like(locs)
 n_boxes = 0
 while len(candidates) > 0:
@@ -216,9 +194,9 @@ for i in range(kept.shape[0]):
 ### More Examples
 
 ```python
-locs16, vals16 = concatenate_matches(
-    [extract_matches(img16a, r) for r in rotations])
-len(vals16)
+locs16, scores16 = match.concatenate(
+    [match.extract(img16a, r) for r in rotations])
+len(scores16)
 ```
 
 ```python
@@ -226,10 +204,6 @@ ax16 = plot_image(img16a, figsize = (15, 15))
 
 for i in range(locs16.shape[0]):
     plot_box(locs16[i, :], ax16)
-```
-
-```python
-
 ```
 
 ```python
@@ -241,9 +215,10 @@ plot_image(img0a_n)
 ```
 
 ```python
-locs0_n, vals0_n = concatenate_matches(
-    [extract_matches(img0a_n, r, 0.8) for r in rotations])
-len(vals0_n)
+locs0_n, scores0_n = match.concatenate(
+    [match.extract(img0a_n, r, threshold = 0.9999,
+                   adaptive = True) for r in rotations])
+len(scores0_n)
 ```
 
 ```python
@@ -251,16 +226,6 @@ ax0_n = plot_image(img0a_n, figsize = (15, 15))
 
 for i in range(locs0_n.shape[0]):
     plot_box(locs0_n[i, :], ax0_n)
-```
-
-```python
-ax0_n = plot_image(img0a_n, figsize = (15, 15))
-
-for m, _ in matches0_n:
-    m = m[::-1]
-    dims = np.array(rotations[0].shape[:2])
-    coords = np.concatenate([m, m + dims])
-    plot_box(coords, ax0_n)
 ```
 
 ## Thresholding

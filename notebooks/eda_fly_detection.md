@@ -47,7 +47,7 @@ from src.viz import *
 ```
 
 ```python
-biden = FlyDatasetReader("../data/2023-03-10_biden")#, max_size = 1_500)
+biden = FlyDatasetReader("../data/2023-03-10_biden") #, max_size = 1_500)
 blank = biden.read_blank()
 img0 = biden.read_fly(0)
 ```

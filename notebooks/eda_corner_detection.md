@@ -54,7 +54,7 @@ plot_image(blank, grayscale = True)
 ```
 
 ```python
-img0 = biden.read_fly(0)
+img0 = biden.read(0)
 plot_image(img0)
 ```
 

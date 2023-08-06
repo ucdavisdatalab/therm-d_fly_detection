@@ -50,7 +50,7 @@ from src.viz import *
 ```python
 biden = FlyDatasetReader("../data/2023-03-10_biden")#, max_size = 1_500)
 blank = biden.read_blank()
-img0 = biden.read_fly(0)
+img0 = biden.read(0)
 ```
 
 ## Rotation
@@ -90,7 +90,7 @@ plot_image(img0a)
 ```
 
 ```python
-img16 = biden.read_fly(16)
+img16 = biden.read(16)
 img16a = img16[1470:3750, 1070:5350]
 plot_image(img16a)
 ```
@@ -208,7 +208,7 @@ for i in range(locs16.shape[0]):
 
 ```python
 biden_new = FlyDatasetReader("../data/2023-07-14_biden/", fly_glob = "*.JPG")
-img0_n = biden_new.read_fly(0)
+img0_n = biden_new.read(0)
 (1148, 1434, 4219, 2338)
 img0a_n = img0_n[1434:1434 + 2338, 1148:1148 + 4219]
 plot_image(img0a_n)

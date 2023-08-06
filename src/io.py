@@ -9,7 +9,20 @@ from pathlib import Path
 
 
 def read_image(path, max_size = 0, grayscale = False):
-    """Read a single image.
+    """Read a single image in RGB or grayscale format.
+
+    Arguments
+    ---------
+    path: str or pathlib.Path
+        The path to the image.
+
+    max_size: int
+        Maximum side length for the image. If the image is larger than this, it
+        will be rescaled so that the longest side has this length. If this is
+        not positive (the default), the image will not be rescaled.
+
+    grayscale: bool
+        Convert the image to grayscale?
     """
     path = str(path)
     if grayscale:
@@ -64,7 +77,7 @@ class FlyDatasetReader:
         # Get all images.
         suffixes = [s.lower() for s in suffixes]
         blank_paths = []
-        fly_paths = []
+        paths = []
         for p in photos_dir.glob(glob):
             # Ignore files with incorrect suffixes.
             if p.suffix.lower() not in suffixes:
@@ -75,27 +88,75 @@ class FlyDatasetReader:
             if blank_pattern and blank_pattern in p.stem.lower():
                 blank_paths.append(p)
             else:
-                fly_paths.append(p)
+                paths.append(p)
 
         self.blank_paths = sorted(blank_paths)
-        self.fly_paths = sorted(fly_paths)
+        self.paths = sorted(paths)
         self.max_size = max_size
 
     def __len__(self):
-        return len(self.fly_paths)
+        return len(self.paths)
 
-    def read_blank(self, **kwargs):
-        n_blank = len(self.blank_paths)
-        if n_blank > 1:
-            print(f"Found {n_blank} paths, returning first.")
+    def __getitem__(self, index):
+        return self.paths[index]
 
+    def iter_read(self, **kwargs):
+        """Iterate over the data set, reading images and yielding (path, image)
+        pairs.
+
+        Yields
+        ------
+        path: pathlib.Path
+            The path to the image.
+
+        image: numpy.ndarray
+            The image in RGB format.
+        """
         if "max_size" not in kwargs:
             kwargs["max_size"] = self.max_size
-        return read_image(self.blank_paths[0], **kwargs)
+        for path in self:
+            yield path, read_image(path, **kwargs)
 
-    def read_fly(self, index, **kwargs):
-        p = self.fly_paths[index]
+    def read(self, index, **kwargs):
+        """Read a single image from the data set.
 
+        Arguments
+        ---------
+        index: int
+            An index into the data set (that is, into the `.paths` attribute).
+
+        **kwargs
+            Additional arguments to read_image.
+
+        Returns
+        -------
+        image: numpy.ndarray
+            The image in RGB format.
+        """
         if "max_size" not in kwargs:
             kwargs["max_size"] = self.max_size
+        p = self.paths[index]
         return read_image(p, **kwargs)
+
+    def read_blank(self, index = 0, **kwargs):
+        """Read a single "blank" no-flies image from the data set.
+
+        Arguments
+        ---------
+        index: int
+            An index into the data set (that is, into the `.paths` attribute).
+
+        **kwargs
+            Additional arguments to read_image.
+
+        Returns
+        -------
+        image: numpy.ndarray
+            The image in RGB format.
+        """
+        if len(self.blank_paths) == 0:
+            raise RuntimeError("No blank images in this data set.")
+
+        if "max_size" not in kwargs:
+            kwargs["max_size"] = self.max_size
+        return read_image(self.blank_paths[index], **kwargs)

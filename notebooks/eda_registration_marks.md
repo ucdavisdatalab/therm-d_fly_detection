@@ -57,8 +57,8 @@ plot_image(blank)
 ```
 
 ```python
-biden = FlyDatasetReader("../data/2023-07-14_biden/", fly_glob = "*.JPG")#, max_size = 1_500)
-biden1 = biden.read_fly(0)
+biden = FlyDatasetReader("../data/2023-07-14_biden/")#, max_size = 1_500)
+biden1 = biden.read(0)
 plot_image(biden1)
 ```
 

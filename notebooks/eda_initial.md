@@ -59,7 +59,7 @@ plot_image(blank, grayscale = True)
 ```
 
 ```python
-img0 = biden.read_fly(0)
+img0 = biden.read(0)
 plot_image(img0)
 ```
 
@@ -118,7 +118,7 @@ plot_box(loc, ax)
 How well does this work in an image with different lighting conditions?
 
 ```python
-img23 = biden.read_fly(23)
+img23 = biden.read(23)
 loc = extract_match(img23, template, cv2.TM_SQDIFF)
 
 ax = plot_image(img23)

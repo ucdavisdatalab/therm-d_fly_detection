@@ -52,7 +52,7 @@ from src.viz import *
 ```python
 biden = FlyDatasetReader("../data/2023-03-10_biden")#, max_size = 1_500)
 blank = biden.read_blank()
-img0 = biden.read_fly(0)
+img0 = biden.read(0)
 ```
 
 ```python
@@ -149,7 +149,7 @@ orient_image
 ```
 
 ```python
-simg0 = shiny.read_fly(0)
+simg0 = shiny.read(0)
 plot_image(simg0)
 ```
 

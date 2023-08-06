@@ -55,7 +55,7 @@ def find_k_similar(x, k, sort = False):
 
 def compute_squares(
     image, n_squares, min_area_proportion = 0.0001, max_area_proportion = 0.1
-    , min_aspect = 0.9, max_aspect = 1.1
+    , min_aspect = 0.8, max_aspect = 1.2
 ):
     """Compute square contours within a given mask.
 
@@ -116,15 +116,10 @@ def compute_squares(
         # Get largest contour.
         contours = contours[:1]
 
-    # Simplify the contours.
-    # NOTE: We could also check that the simplified contours have 4 corners.
-    # NOTE: Or check aspect ratio of bounding box is near 1.
+    # Find smallest rotated rectangle enclosing the contour.
     contours = [
-        cv2.approxPolyDP(x, 0.05 * cv2.arcLength(x, True), True)
+        cv2.boxPoints(cv2.minAreaRect(x)).astype(int)
         for x in contours]
-
-    # Drop any superfluous dimensions.
-    contours = [np.squeeze(x) for x in contours]
 
     return contours, area
 

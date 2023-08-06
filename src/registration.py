@@ -5,6 +5,43 @@ import cv2
 import numpy as np
 
 
+def orient_and_bound(alignment_mark, position_marks):
+    """Compute orientation and corners of a fly arena from its (orange)
+    alignment mark and (green) position marks.
+    """
+    if not isinstance(alignment_mark, list):
+        alignment_mark = [alignment_mark]
+    elif len(alignment_mark) != 1:
+        raise ValueError("There must be only 1 alignment mark.")
+
+    # Compute median of each mark.
+    marks = alignment_mark + position_marks
+    medians = np.stack([np.median(c, axis = 0) for c in marks])
+    # Get indexes of top left, top right, bottom right, bottom left.
+    mark_order = arg_corner_sort(medians)
+
+    # Determine orientation by checking where the (orange) alignment mark is.
+    match np.where(mark_order == 0)[0]:
+        case 0:  # Top left (the correct orientation)
+            orient = None
+        case 1:  # Top right
+            orient = cv2.ROTATE_90_COUNTERCLOCKWISE
+        case 2:  # Bottom right
+            orient = cv2.ROTATE_180
+        case 3:  # Bottom left
+            orient = cv2.ROTATE_90_CLOCKWISE
+
+    # Find the four corners of the arena.
+    # Get top-left corner of top-left mark, etc...
+    arena = np.empty_like(marks[0])
+    for i, ix in enumerate(mark_order):
+        mark = marks[ix]
+        corner_order = arg_corner_sort(mark)
+        arena[i, :] = mark[corner_order[i]]
+
+    return orient, arena
+
+
 def arg_corner_sort(points):
     """Find top-left, top-right, bottom-right, bottom-left ordering of four
     points.

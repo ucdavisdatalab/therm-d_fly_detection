@@ -101,34 +101,7 @@ In a correctly oriented image, the orange square should be at the top left
 corner.
 
 ```python
-def orient_and_bound(green, orange):
-    # Compute median center of each square and thereby determine which the
-    # orange square's corner.
-    contours = [orange] + green
-    m = np.stack([np.median(c, axis = 0) for c in contours])
-    mark_corners = arg_corner_sort(m)
-
-    match np.where(mark_corners == 0)[0]:
-        case 0: # in tl
-            orient = None
-        case 1: # in tr
-            orient = cv2.ROTATE_90_COUNTERCLOCKWISE
-        case 2: # in br
-            orient = cv2.ROTATE_180
-        case 3: # in bl
-            orient = cv2.ROTATE_90_CLOCKWISE
-
-    # Next, find the bound of the arena.
-    # Strategy: get top-left corner of top-left contour, etc...
-    bound = np.empty_like(contours[0])
-    for i, ix in enumerate(mark_corners):
-        contour = contours[ix]
-        corners = arg_corner_sort(contour)
-        bound[i, :] = contour[corners[i]]
-    
-    return contours, mark_corners, orient, bound
-
-z = orient_and_bound(squares, squares_orange[0])
+z = orient_and_bound(squares_orange[0], squares)
 z
 ```
 

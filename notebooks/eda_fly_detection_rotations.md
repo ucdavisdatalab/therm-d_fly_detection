@@ -43,7 +43,6 @@ import numpy as np
 from src.io import *
 import src.match as match
 import src.ops as ops
-#from src.tsops import *
 from src.viz import *
 ```
 
@@ -158,36 +157,7 @@ When several boxes have a large overlap, ignore all but the box with the
 highest score.
 
 ```python
-def fast_iou(a, b, area):
-    # Find intersection area.
-    h = min(a[2], b[2]) - max(a[0], b[0])
-    w = min(a[3], b[3]) - max(a[1], b[1])
-    int_area = max(0, h) * max(0, w)
-    return int_area / (2 * area - int_area)
-
-# See:
-#    https://learnopencv.com/non-maximum-suppression-theory-and-implementation-in-pytorch/
-# Iterate on selecting the best match and removing high IoU boxes.
-candidates = np.argsort(scores)  # smallest to largest
-kept = np.zeros_like(locs)
-n_boxes = 0
-while len(candidates) > 0:
-    # Find best match.
-    i = candidates[-1]
-    candidates = candidates[:-1]
-    best = locs[i, :]
-    kept[n_boxes] = best
-    n_boxes += 1
-
-    # Remove all boxes with high IoU compared to best match.
-    c_locs = locs[candidates, :]
-    h = np.fmin(best[2], c_locs[:, 2]) - np.fmax(best[0], c_locs[:, 0])
-    w = np.fmin(best[3], c_locs[:, 3]) - np.fmax(best[1], c_locs[:, 1])
-    int_area = np.fmax(0, h) * np.fmax(0, w)
-    ious = int_area / (2 * 2500 - int_area)
-    candidates = candidates[ious < 0.60]
-
-kept = kept[:n_boxes]
+kept = match.suppress_nonmax(locs, scores)
 ```
 
 ```python

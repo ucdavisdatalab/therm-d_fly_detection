@@ -124,3 +124,63 @@ def extract(
         similarity[slice(*y_nhood), slice(*x_nhood)] = -1
 
     return locs[:i + 1, :], scores[:i + 1]
+
+
+def suppress_nonmax(boxes, scores, threshold = 0.6):
+    """Remove redundant bounding boxes by keeping only the highest-scoring box
+    in each group of boxes with excessive overlap.
+
+    Caution: this function assumes all boxes have the same area!
+
+    Arguments
+    ---------
+    boxes: np.ndarray
+        A matrix where each row is one box and the columns are the coordinates
+        for top, left, bottom, right.
+
+    scores: np.ndarray
+        An array of similarity scores, with one element for each row in
+        `boxes`.
+
+    threshold: float
+        Maximum intersection-over-union (IoU) for a box to be kept.
+    """
+    # See:
+    #    https://learnopencv.com/non-maximum-suppression-theory-and-implementation-in-pytorch/
+    #
+    # Compute box area for IoU calculation.
+    box_area = (boxes[0, 2] - boxes[0, 0]) * (boxes[0, 3] - boxes[0, 1])
+
+    # Process the boxes until no boxes remain.
+    ix_remaining = np.argsort(scores)  # smallest to largest
+    kept = np.zeros_like(boxes)
+    n_kept = 0
+    while len(ix_remaining) > 0:
+        # Of the remaining boxes, get the one with the highest similarity
+        # score. This is the "best" remaining box.
+        ix_best = ix_remaining[-1]
+        best = boxes[ix_best, :]
+        ix_remaining = ix_remaining[:-1]
+        # Keep the best box.
+        kept[n_kept] = best
+        n_kept += 1
+
+        # Compute intersection-over-union of best box with all remaining boxes.
+        ious = _equal_area_box_iou(best, boxes[ix_remaining, :], box_area)
+        # Only keep boxes with low IoU.
+        ix_remaining = ix_remaining[ious < threshold]
+
+    # Only n_boxes kept.
+    return kept[:n_kept]
+
+
+def _equal_area_box_iou(box, boxes, box_area):
+    """Compute the intersection-over-union for one box against many boxes, with
+    the assumption that every box has the same area.
+    """
+    # Compute intersection area.
+    h = np.fmin(box[2], boxes[:, 2]) - np.fmax(box[0], boxes[:, 0])
+    w = np.fmin(box[3], boxes[:, 3]) - np.fmax(box[1], boxes[:, 1])
+    intersect_area = np.fmax(0, h) * np.fmax(0, w)
+    # Boxes have same size, so denominator (below) is union area.
+    return intersect_area / (2 * box_area - intersect_area)

@@ -85,6 +85,12 @@ plot_image_grid(rotations)
 ```
 
 ```python
+template_path = Path("../output/fly_template.npz")
+if not template_path.is_file():
+    np.savez_compressed(template_path, *rotations)
+```
+
+```python
 img0a = img0[1470:3750, 1070:5350]
 plot_image(img0a)
 ```

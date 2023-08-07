@@ -63,3 +63,38 @@ def rescale(image, max_size):
     w = int(round(w * scaling))
     h = int(round(h * scaling))
     return cv2.resize(image, (w, h))
+
+
+def get_perspective_transform(contour):
+    """Get perspective transformation that makes the area inside of the given
+    4-point contour into a rectangular image.
+
+    Arguments
+    ---------
+    contour: np.ndarray
+        A contour with 4 points corresponding to the top left, top right,
+        bottom right, and bottom left.
+
+    Returns
+    -------
+    out
+        A 3-tuple that contains an OpenCV perspective transformation, the new
+        width, and the new height.
+    """
+    # Compute size of new image based on max length of each pair of parallel
+    # sides.
+    lengths = np.linalg.norm(contour - contour[[1, 2, 3, 0], :], axis = 1)
+    lengths = np.rint(lengths).astype(int)
+    width = lengths[::2].max()
+    height = lengths[1::2].max()
+
+    # The `getPerspectiveTransform` function requires float32 arguments.
+    contour = np.float32(contour)
+    output_xy = np.float32([
+        [0, 0]
+        , [width - 1, 0]
+        , [width - 1, height - 1]
+        , [0, height - 1]
+    ])
+
+    return cv2.getPerspectiveTransform(contour, output_xy), width, height

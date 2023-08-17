@@ -21,7 +21,7 @@ from pathlib import Path
 import sys
 
 
-def register_arena(args):
+def register_arenas(args):
     """Register the fly arenas.
     """
     # Read the data set.
@@ -101,6 +101,10 @@ def register_arena(args):
         print(f"Wrote '{out_path}'.")
 
 
+def match_flies(args):
+    print("Not implemented yet.")
+
+
 def prompt_yes(prompt):
     """Prompt the user with a yes or no question and return True if they
     respond yes.
@@ -116,16 +120,27 @@ def prompt_yes(prompt):
 def main():
     # Parse command line arguments.
     parser = ArgumentParser()
+    subparsers = parser.add_subparsers(title = "subcommands")
+
+    register_parser = subparsers.add_parser(
+        "inspect", help = "(step 1) register arenas in data set")
+    register_parser.set_defaults(func = register_arenas)
+
+    match_parser = subparsers.add_parser(
+        "match", help = "apply template matching to data set")
+    match_parser.set_defaults(func = match_flies)
+
     parser.add_argument(
         "data", type = Path, help = "path to the data set directory")
     parser.add_argument(
         "out", type = Path, help = "path to directory to save output"
         , default = Path("output/test/"), nargs = "?")
+
     args = parser.parse_args()
 
-    # Read config file if there is one.
+    # TODO: Read config file if there is one.
 
-    register_arena(args)
+    args.func(args)
 
 
 if __name__ == "__main__":

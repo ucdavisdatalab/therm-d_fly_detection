@@ -8,13 +8,15 @@ Currently, this module only runs step 1 of these steps:
 """
 
 import cv2
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 
 from .io import FlyDatasetReader
+from . import io
+from . import match
 from . import ops
 from . import registration as reg
-#from . import viz
+from . import viz
 
 from argparse import ArgumentParser
 from pathlib import Path
@@ -24,6 +26,10 @@ import sys
 def register_arenas(args):
     """Register the fly arenas.
     """
+    # TODO:
+    #   + Standardize image brightness
+    #   + Expose mask_hsv parameters
+
     # Read the data set.
     path = args.data
     if not path.is_dir():
@@ -102,7 +108,63 @@ def register_arenas(args):
 
 
 def match_flies(args):
-    print("Not implemented yet.")
+    """Apply template matching to fly images.
+    """
+    # TODO:
+    #   + Scale templates according to size of image
+    #   + Standardize image brightness
+    #   + Expose match.extract parameters
+
+    # Make sure the output directory exists.
+    out_dir = args.out
+    print(f"Output directory: {out_dir}")
+    out_dir.mkdir(parents = True, exist_ok = True)
+    if next(out_dir.iterdir(), None):
+        msg = (f"Directory '{out_dir}' contains files. "
+               "Continue and possibly overwrite (y/n)? ")
+        if not prompt_yes(msg):
+            sys.exit(1)
+
+    debug_dir = out_dir / "debug"
+    debug_dir.mkdir(exist_ok = True)
+
+    # Read the data set.
+    dset_path = args.data
+    if not dset_path.is_dir():
+        raise IOError(f"'{dset_path}' is not a valid path to a directory")
+
+    dset = FlyDatasetReader(dset_path)
+    print(f"Found {len(dset)} images in data set '{dset_path}'.")
+
+    # Load the templates.
+    template_path = Path("output/fly_template.npz")
+    templates = np.load(template_path)
+    templates = list(templates.values())
+    print(f"Found {len(templates)} templates at '{template_path}'.")
+
+    # Process each image.
+    for path, img in dset.iter_read():
+        print(f"\nProcessing '{path}'.")
+        # Run template matching.
+        boxes, scores = match.concatenate(
+            [match.extract(img, t, verbose = args.debug) for t in templates])
+        boxes = match.suppress_nonmax(boxes, scores)
+        print(f"Found {boxes.shape[0]} boxes.")
+
+        if args.debug:
+            # Output a diagnostic image.
+            ax = viz.plot_image(img, figsize = (15, 15))
+
+            for i in range(boxes.shape[0]):
+                viz.plot_box(boxes[i, :], ax)
+            debug_path = debug_dir / path.name
+            plt.savefig(debug_path, bbox_inches = "tight")
+            print(f"Wrote '{debug_path}'.")
+
+        # Save to a YOLO file.
+        out_path = out_dir / (str(path.stem) + ".txt")
+        io.write_yolo(out_path, boxes, scores, img.shape)
+        print(f"Wrote '{out_path}'.")
 
 
 def prompt_yes(prompt):
@@ -120,21 +182,26 @@ def prompt_yes(prompt):
 def main():
     # Parse command line arguments.
     parser = ArgumentParser()
+    parser.add_argument(
+        "--debug", action = "store_true"
+        , help = "output diagnostic information")
+
     subparsers = parser.add_subparsers(title = "subcommands")
 
     register_parser = subparsers.add_parser(
-        "inspect", help = "(step 1) register arenas in data set")
+        "register", help = "(step 1) register arenas in data set")
     register_parser.set_defaults(func = register_arenas)
 
     match_parser = subparsers.add_parser(
         "match", help = "apply template matching to data set")
     match_parser.set_defaults(func = match_flies)
 
-    parser.add_argument(
-        "data", type = Path, help = "path to the data set directory")
-    parser.add_argument(
-        "out", type = Path, help = "path to directory to save output"
-        , default = Path("output/test/"), nargs = "?")
+    for name, subparser in subparsers.choices.items():
+        subparser.add_argument(
+            "data", type = Path, help = "path to the data set directory")
+        subparser.add_argument(
+            "out", type = Path, help = "path to directory to save output"
+            , default = Path("output/test/"), nargs = "?")
 
     args = parser.parse_args()
 

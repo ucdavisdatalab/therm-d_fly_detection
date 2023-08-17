@@ -8,43 +8,22 @@ Currently, this module only runs step 1 of these steps:
 """
 
 import cv2
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 
 from .io import FlyDatasetReader
 from . import ops
 from . import registration as reg
-from . import viz
+#from . import viz
 
 from argparse import ArgumentParser
 from pathlib import Path
 import sys
 
 
-def prompt_yes(prompt):
-    """Prompt the user with a yes or no question and return True if they
-    respond yes.
+def register_arena(args):
+    """Register the fly arenas.
     """
-    while True:
-        match input(prompt).lower():
-            case "y" | "yes":
-                return True
-            case "n" | "no":
-                return False
-
-
-def main():
-    # Parse command line arguments.
-    parser = ArgumentParser()
-    parser.add_argument(
-        "data", type = Path, help = "path to the data set directory")
-    parser.add_argument(
-        "out", type = Path, help = "path to directory to save output"
-        , default = Path("output/test/"), nargs = "?")
-    args = parser.parse_args()
-
-    # Read config file if there is one.
-
     # Read the data set.
     path = args.data
     if not path.is_dir():
@@ -120,6 +99,33 @@ def main():
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         cv2.imwrite(str(out_path), img)
         print(f"Wrote '{out_path}'.")
+
+
+def prompt_yes(prompt):
+    """Prompt the user with a yes or no question and return True if they
+    respond yes.
+    """
+    while True:
+        match input(prompt).lower():
+            case "y" | "yes":
+                return True
+            case "n" | "no":
+                return False
+
+
+def main():
+    # Parse command line arguments.
+    parser = ArgumentParser()
+    parser.add_argument(
+        "data", type = Path, help = "path to the data set directory")
+    parser.add_argument(
+        "out", type = Path, help = "path to directory to save output"
+        , default = Path("output/test/"), nargs = "?")
+    args = parser.parse_args()
+
+    # Read config file if there is one.
+
+    register_arena(args)
 
 
 if __name__ == "__main__":

@@ -162,20 +162,35 @@ class FlyDatasetReader:
         return read_image(self.blank_paths[index], **kwargs)
 
 
-def yolo_converter(img, locs, scores, output):
-    ''' img should be the image, this is used to determine the shape to have the templates normalized
-    locs are the locations of the templates
-    scores are the confidence scores of the templates
-    output should be a str type and the yolo txt will be generated in this name'''
-    
+def write_yolo(output, locs, scores, img):
+    '''Write the bounding boxes in YOLO format for a single image.
+
+    Arguments
+    ---------
+    output: str
+        Path to where the YOLO file should be saved.
+
+    locs: np.ndarray
+        Coordinates of the boxes, where each row is one box and the columns are
+        top, left, bottom, right.
+
+    scores: np.ndarray
+        Similarity scores of the boxes.
+
+    img: np.ndarray
+        The image. The dimensions are used to standardize the coordinates.
+    '''
     lines = []
-    for i in range(locs.shape[0]):
-        yloc = ((locs[i,0] + locs[i,2])/2) 
-        xloc = ((locs[i,1] + locs[i,3])/2)
-        w = (locs[i,2] - yloc) / img.shape[1]
-        h = (locs[i,3] - xloc) / img.shape[0]
+    n_boxes = locs.shape[0]
+    for i in range(n_boxes):
+        yloc = (locs[i, 0] + locs[i, 2]) / 2
+        xloc = (locs[i, 1] + locs[i, 3]) / 2
+        h = (locs[i, 2] - yloc) / img.shape[0]
+        w = (locs[i, 3] - xloc) / img.shape[1]
         yloc /= img.shape[0]
         xloc /= img.shape[1]
+
         lines.append(f"0 {xloc} {yloc} {w} {h} {scores[i]}\n")
-    with open(output + '.txt', 'wt') as f:
+
+    with open(output, 'wt') as f:
         f.writelines(lines)

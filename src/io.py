@@ -180,17 +180,17 @@ def write_yolo(path, boxes, scores, shape):
     shape: np.ndarray
         The dimensions of the image, to standardize the coordinates.
     '''
-    lines = []
-    n_boxes = boxes.shape[0]
-    for i in range(n_boxes):
-        yloc = (boxes[i, 0] + boxes[i, 2]) / 2
-        xloc = (boxes[i, 1] + boxes[i, 3]) / 2
-        h = (boxes[i, 2] - yloc) / shape[0]
-        w = (boxes[i, 3] - xloc) / shape[1]
-        yloc /= shape[0]
-        xloc /= shape[1]
+    ylocs = (boxes[:, 0] + boxes[:, 2]) / 2
+    xlocs = (boxes[:, 1] + boxes[:, 3]) / 2
+    heights = (boxes[:, 2] - ylocs) / shape[0]
+    widths = (boxes[:, 3] - xlocs) / shape[1]
+    ylocs /= shape[0]
+    xlocs /= shape[1]
 
-        lines.append(f"0 {xloc} {yloc} {w} {h} {scores[i]}\n")
+    lines = [
+        f"0 {x} {y} {w} {h} {s}\n"
+        for x, y, w, h, s in zip(xlocs, ylocs, widths, heights, scores)
+    ]
 
     with open(path, 'wt') as f:
         f.writelines(lines)

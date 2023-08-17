@@ -160,3 +160,22 @@ class FlyDatasetReader:
         if "max_size" not in kwargs:
             kwargs["max_size"] = self.max_size
         return read_image(self.blank_paths[index], **kwargs)
+
+
+def yolo_converter(img, locs, scores, output):
+    ''' img should be the image, this is used to determine the shape to have the templates normalized
+    locs are the locations of the templates
+    scores are the confidence scores of the templates
+    output should be a str type and the yolo txt will be generated in this name'''
+    
+    lines = []
+    for i in range(locs.shape[0]):
+        yloc = ((locs[i,0] + locs[i,2])/2) 
+        xloc = ((locs[i,1] + locs[i,3])/2)
+        w = (locs[i,2] - yloc) / img.shape[1]
+        h = (locs[i,3] - xloc) / img.shape[0]
+        yloc /= img.shape[0]
+        xloc /= img.shape[1]
+        lines.append(f"0 {xloc} {yloc} {w} {h} {scores[i]}\n")
+    with open(output + '.txt', 'wt') as f:
+        f.writelines(lines)

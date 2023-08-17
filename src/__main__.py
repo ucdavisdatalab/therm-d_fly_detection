@@ -30,6 +30,16 @@ def register_arenas(args):
     #   + Standardize image brightness
     #   + Expose mask_hsv parameters
 
+    # Make sure the output directory exists.
+    out_dir = args.out
+    print(f"Output directory: {out_dir}")
+    out_dir.mkdir(parents = True, exist_ok = True)
+    if next(out_dir.iterdir(), None):
+        msg = (f"Directory '{out_dir}' contains files. "
+               "Continue and possibly overwrite (y/n)? ")
+        if not prompt_yes(msg):
+            sys.exit(1)
+
     # Read the data set.
     path = args.data
     if not path.is_dir():
@@ -54,6 +64,7 @@ def register_arenas(args):
             img, (5, 79, 127), (20, 255, 255), close_kernel = 11)
         orange_square, _ = reg.compute_squares(orange_mask, 1)
 
+        # TODO: Save these diagnostic images if args.debug is True.
         # preview = cv2.drawContours(
         #     img.copy(), green_squares, -1, (0, 255, 0), 3)
         # preview = cv2.drawContours(
@@ -81,16 +92,6 @@ def register_arenas(args):
 
     transform, width, height = ops.get_perspective_transform(m_arena)
     print(f"{width=}, {height=}")
-
-    # Make sure the output directory exists.
-    out_dir = args.out
-    print(f"Output directory: {out_dir}")
-    out_dir.mkdir(parents = True, exist_ok = True)
-    if next(out_dir.iterdir(), None):
-        msg = (f"Directory '{out_dir}' contains files. "
-               "Continue and possibly overwrite (y/n)? ")
-        if not prompt_yes(msg):
-            sys.exit(1)
 
     # Extract and save the arenas.
     for path, img in zip(dset, images):

@@ -40,6 +40,9 @@ def register_arenas(args):
         if not prompt_yes(msg):
             sys.exit(1)
 
+    debug_dir = out_dir / "debug"
+    debug_dir.mkdir(exist_ok = True)
+
     # Read the data set.
     path = args.data
     if not path.is_dir():
@@ -49,39 +52,40 @@ def register_arenas(args):
     print(f"Found {len(dset)} images in data set '{path}'.")
 
     # Find the registration marks.
+    orientations = []
     arenas = []
     images = []
     for path, img in dset.iter_read():
         print(path)
 
-        # FIXME: Standardize brightness across images.
+        # Standardize brightness across images.
+        img = ops.gamma_transform(img, gamma_quantile = 0.05)
 
         green_mask = reg.mask_hsv(
             img, (60, 50, 79), (120, 255, 255), close_kernel = 11)
         green_squares, _ = reg.compute_squares(green_mask, 3)
 
         orange_mask = reg.mask_hsv(
-            img, (5, 79, 127), (20, 255, 255), close_kernel = 11)
+            img, (5, 79, 95), (20, 255, 255), close_kernel = 11)
         orange_square, _ = reg.compute_squares(orange_mask, 1)
 
-        # TODO: Save these diagnostic images if args.debug is True.
-        # preview = cv2.drawContours(
-        #     img.copy(), green_squares, -1, (0, 255, 0), 3)
-        # preview = cv2.drawContours(
-        #     preview, orange_square, -1, (255, 0, 0), 3)
-        #
-        # out_path = Path("output/test/") / dset.fly_paths[i].name
-        # cv2.imwrite(str(out_path), preview)
-        # print(f"Wrote '{out_path}'.")
+        if args.debug:
+            # Save a diagnostic image.
+            preview = cv2.drawContours(
+                img.copy(), green_squares, -1, (0, 255, 0), 3)
+            preview = cv2.drawContours(
+                preview, orange_square, -1, (255, 0, 0), 3)
+
+            debug_path = debug_dir / path.name
+            cv2.imwrite(str(debug_path), preview)
+            print(f"Wrote '{debug_path}'.")
 
         # Get orientation and arena bounds.
         orient, arena = reg.orient_and_bound(orange_square, green_squares)
         print(f"{orient=}\n{arena=}")
+        orientations.append(orient)
         arenas.append(arena.ravel())
 
-        # Orient the image.
-        if orient:
-            img = cv2.rotate(img, orient)
         images.append(img)
 
     # Compute median arena position. No need to convert to int since the
@@ -94,11 +98,15 @@ def register_arenas(args):
     print(f"{width=}, {height=}")
 
     # Extract and save the arenas.
-    for path, img in zip(dset, images):
+    for path, img, orient in zip(dset, images, orientations):
         img = cv2.warpPerspective(
             img, transform, (width, height), flags = cv2.INTER_CUBIC)
 
         print(f"{path=}, {img.shape}")
+
+        # Orient the image.
+        if orient:
+            img = cv2.rotate(img, orient)
 
         # Save the new image (or save metadata about the orientation and
         # perspective).

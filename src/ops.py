@@ -5,6 +5,39 @@ import cv2
 import numpy as np
 
 
+def gamma_transform(
+    image, gamma = None, gamma_quantile = 0.25, verbose = False
+):
+    """Adjust the gamma of an image.
+
+    Arguments
+    ---------
+    image: np.ndarray
+        The image to transform.
+
+    gamma: float or None
+        The gamma exponent. If this is None, it will be estimated automatically
+        so that a quantile of the image gets a 50% value.
+
+    gamma_quantile: float
+        If `gamma` is None, the quantile to assign to a 50% value.
+
+    verbose: bool
+        Print diagnostic messages?
+    """
+    if gamma is None:
+        # Estimate gamma.
+        gamma = np.log(np.quantile(image, gamma_quantile)) / np.log(128)
+        if verbose:
+            print(f"Estimated gamma: {gamma:.2f}")
+
+    # Use a lookup table to quickly compute the new pixel values.
+    lookup_table = np.empty((1, 256), np.uint8)
+    for i in range(256):
+        lookup_table[0, i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
+    return cv2.LUT(image, lookup_table)
+
+
 def rotate(image, angle, flags = cv2.INTER_LINEAR):
     """Rotate an image counterclockwise by an arbitrary angle.
 

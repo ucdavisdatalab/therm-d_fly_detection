@@ -221,3 +221,144 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+class FlyDatasetReader:
+    def __init__(
+        self, data_dir, glob = "*", suffixes = [".jpg", ".jpeg"], max_size = 0
+        , blank_pattern = "blank"
+    ):
+        """Create a new FlyDataSetReader.
+
+        Arguments
+        ---------
+        data_dir: str or pathlib.Path
+            Path to the data set directory. The data set directory should
+            contain a directory named "photos/" which contains the images.
+
+        glob: str
+            Case-sensitive glob string to filter files in the `photos/`
+            directory.
+
+        suffixes: list of str
+            Case-insensitive filename suffixes to further filter files in the
+            `photos/` directory *after* globbing. These should include the dot,
+            as in `.jpg`.
+
+        max_size: int
+            Maximum side length for images. Images larger than this will be
+            rescaled so that the longest side has this length. If this is not
+            positive (the default), images will not be rescaled.
+
+        blank_pattern: str
+            Case-insensitive pattern for "blank" no-flies images.
+        """
+        # Make sure there's a `photos/` directory.
+        photos_dir = Path(data_dir) / "photos"
+        if not photos_dir.is_dir():
+            raise FileNotFoundError(
+                f"Directory '{photos_dir}' does not exist.")
+
+        # Get all images.
+        suffixes = [s.lower() for s in suffixes]
+        blank_paths = []
+        paths = []
+        for p in photos_dir.glob(glob):
+            # Ignore files with incorrect suffixes.
+            if p.suffix.lower() not in suffixes:
+                continue
+
+            # Check whether filename contains pattern for "blank" no flies
+            # images.
+            if blank_pattern and blank_pattern in p.stem.lower():
+                blank_paths.append(p)
+            else:
+                paths.append(p)
+
+        file = os.listdir(data_dir)
+        excel = [p for p in file if p.lower().endswith(('.xlsx', '.xls'))]
+        if len(excel) != 1:
+            raise RuntimeError("Must have exactly 1 excel sheet")
+        else:
+            self.excel = data_dir + "/" + excel[0]
+
+        self.blank_paths = sorted(blank_paths)
+        self.paths = sorted(paths)
+        self.max_size = max_size
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, index):
+        return self.paths[index]
+
+    def iter_read(self, **kwargs):
+        """Iterate over the data set, reading images and yielding (path, image)
+        pairs.
+
+        Yields
+        ------
+        path: pathlib.Path
+            The path to the image.
+
+        image: numpy.ndarray
+            The image in RGB format.
+        """
+        if "max_size" not in kwargs:
+            kwargs["max_size"] = self.max_size
+        for path in self:
+            yield path, read_image(path, **kwargs)
+
+    def read(self, index, **kwargs):
+        """Read a single image from the data set.
+
+        Arguments
+        ---------
+        index: int
+            An index into the data set (that is, into the `.paths` attribute).
+
+        **kwargs
+            Additional arguments to read_image.
+
+        Returns
+        -------
+        image: numpy.ndarray
+            The image in RGB format.
+        """
+        if "max_size" not in kwargs:
+            kwargs["max_size"] = self.max_size
+        p = self.paths[index]
+        return read_image(p, **kwargs)
+
+    def read_blank(self, index = 0, **kwargs):
+        """Read a single "blank" no-flies image from the data set.
+
+        Arguments
+        ---------
+        index: int
+            An index into the data set (that is, into the `.paths` attribute).
+
+        **kwargs
+            Additional arguments to read_image.
+
+        Returns
+        -------
+        image: numpy.ndarray
+            The image in RGB format.
+        """
+        if len(self.blank_paths) == 0:
+            raise RuntimeError("No blank images in this data set.")
+
+        if "max_size" not in kwargs:
+            kwargs["max_size"] = self.max_size
+        return read_image(self.blank_paths[index], **kwargs)
+        
+    def read_sheet_temperatures(self):
+        df = pd.read_excel(self.excel) 
+        ind = df[df.iloc[:,0] == 'temperature probe'].index[0]
+        df = df[ind:ind + 3].dropna(axis = 1)
+        df.columns = df.iloc[0]
+        df = df[1:3]
+        df = df.set_index('temperature probe')
+        df = df.to_numpy()
+        return(df)   

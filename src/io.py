@@ -95,8 +95,8 @@ class FlyDatasetReader:
             else:
                 paths.append(p)
 
-        paths = os.listdir(data_dir)
-        excel = [p for p in paths if p.lower().endswith(('.xlsx', '.xls'))]
+        file = os.listdir(data_dir)
+        excel = [p for p in file if p.lower().endswith(('.xlsx', '.xls'))]
         if len(excel) != 1:
             raise RuntimeError("Must have exactly 1 excel sheet")
         else:

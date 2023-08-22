@@ -95,10 +95,16 @@ class FlyDatasetReader:
             else:
                 paths.append(p)
 
+        paths = os.listdir(data_dir)
+        excel = [p for p in paths if p.lower().endswith(('.xlsx', '.xls'))]
+        if len(excel) != 1:
+            raise RuntimeError("Must have exactly 1 excel sheet")
+        else:
+            self.excel = data_dir + "/" + excel[0]
+
         self.blank_paths = sorted(blank_paths)
         self.paths = sorted(paths)
         self.max_size = max_size
-        self.file_name = data_dir
 
     def __len__(self):
         return len(self.paths)
@@ -167,16 +173,8 @@ class FlyDatasetReader:
             kwargs["max_size"] = self.max_size
         return read_image(self.blank_paths[index], **kwargs)
         
-    def get_excel_path(self):
-        paths = os.listdir(self.file_name)
-        excel = [p for p in paths if p.lower().endswith(('.xlsx', '.xls'))]
-        if len(excel) != 1:
-            raise RuntimeError("Must have exactly 1 excel sheet")
-        else:
-            return(self.file_name + "/" + excel[0])
-            
     def read_sheet_temperatures(self):
-        df = pd.read_excel(self.get_excel_path()) 
+        df = pd.read_excel(self.excel) 
         ind = df[df.iloc[:,0] == 'temperature probe'].index[0]
         df = df[ind:ind + 3].dropna(axis = 1)
         df.columns = df.iloc[0]
@@ -184,4 +182,34 @@ class FlyDatasetReader:
         df = df.set_index('temperature probe')
         df = df.to_numpy()
         return(df)   
+
+
+def write_yolo(path, boxes, scores, shape):
+    '''Write the bounding boxes in YOLO format for a single image.
+    Arguments
+    ---------
+    path: str or Path
+        Path to where the YOLO file should be saved.
+    boxes: np.ndarray
+        Coordinates of the boxes, where each row is one box and the columns are
+        top, left, bottom, right.
+    scores: np.ndarray
+        Similarity scores of the boxes.
+    shape: np.ndarray
+        The dimensions of the image, to standardize the coordinates.
+    '''
+    ylocs = (boxes[:, 0] + boxes[:, 2]) / 2
+    xlocs = (boxes[:, 1] + boxes[:, 3]) / 2
+    heights = (boxes[:, 2] - ylocs) / shape[0]
+    widths = (boxes[:, 3] - xlocs) / shape[1]
+    ylocs /= shape[0]
+    xlocs /= shape[1]
+
+    lines = [
+        f"0 {x} {y} {w} {h} {s}\n"
+        for x, y, w, h, s in zip(xlocs, ylocs, widths, heights, scores)
+    ]
+
+    with open(path, 'wt') as f:
+        f.writelines(lines)
             

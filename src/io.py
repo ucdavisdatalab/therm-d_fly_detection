@@ -2,15 +2,14 @@
 """
 
 import cv2
-
-import os
+import numpy as np
+import pandas as pd
 
 from .ops import rescale
 
+import os
 from pathlib import Path
-
-import pandas as pd
-
+import warnings
 
 
 def read_image(path, max_size = 0, grayscale = False):
@@ -97,9 +96,13 @@ class FlyDatasetReader:
 
         file = os.listdir(data_dir)
         excel = [p for p in file if p.lower().endswith(('.xlsx', '.xls'))]
-        if len(excel) != 1:
-            raise RuntimeError("Must have exactly 1 excel sheet")
+        if len(excel) == 0:
+            warnings.warn("No Excel file found.")
+            self.excel = None
         else:
+            if len(excel) > 1:
+                warnings.warn(
+                    "More than one Excel file found. Using the first.")
             self.excel = data_dir + "/" + excel[0]
 
         self.blank_paths = sorted(blank_paths)
@@ -172,27 +175,32 @@ class FlyDatasetReader:
         if "max_size" not in kwargs:
             kwargs["max_size"] = self.max_size
         return read_image(self.blank_paths[index], **kwargs)
-        
+
     def read_sheet_temperatures(self):
-        df = pd.read_excel(self.excel) 
-        ind = df[df.iloc[:,0] == 'temperature probe'].index[0]
+        if self.excel is None:
+            raise RuntimeError("No Excel file found.")
+        df = pd.read_excel(self.excel)
+        ind = df[df.iloc[:, 0] == 'temperature probe'].index[0]
         df = df[ind:ind + 3].dropna(axis = 1)
         df.columns = df.iloc[0]
         df = df[1:3]
         df = df.set_index('temperature probe')
         df = df.to_numpy()
-        return(df)   
+        return df
 
 
 def write_yolo(path, boxes, scores, shape):
     '''Write the bounding boxes in YOLO format for a single image.
+
     Arguments
     ---------
     path: str or Path
         Path to where the YOLO file should be saved.
+
     boxes: np.ndarray
         Coordinates of the boxes, where each row is one box and the columns are
         top, left, bottom, right.
+
     scores: np.ndarray
         Similarity scores of the boxes.
     shape: np.ndarray

@@ -202,21 +202,26 @@ def write_yolo(path, boxes, scores, shape):
         top, left, bottom, right.
 
     scores: np.ndarray
-        Similarity scores of the boxes.
+        Similarity scores of the boxes, or None to skip writing scores.
+
     shape: np.ndarray
         The dimensions of the image, to standardize the coordinates.
     '''
-    ylocs = (boxes[:, 0] + boxes[:, 2]) / 2
-    xlocs = (boxes[:, 1] + boxes[:, 3]) / 2
-    heights = (boxes[:, 2] - ylocs) / shape[0]
-    widths = (boxes[:, 3] - xlocs) / shape[1]
-    ylocs /= shape[0]
-    xlocs /= shape[1]
+    ylocs = (boxes[:, 2] + boxes[:, 0]) / (2 * shape[0])
+    xlocs = (boxes[:, 3] + boxes[:, 1]) / (2 * shape[1])
+    heights = (boxes[:, 2] - boxes[:, 0]) / shape[0]
+    widths = (boxes[:, 3] - boxes[:, 1]) / shape[1]
 
-    lines = [
-        f"0 {x} {y} {w} {h} {s}\n"
-        for x, y, w, h, s in zip(xlocs, ylocs, widths, heights, scores)
-    ]
+    if scores is None:
+        lines = [
+            f"0 {x} {y} {w} {h}\n"
+            for x, y, w, h in zip(xlocs, ylocs, widths, heights)
+        ]
+    else:
+        lines = [
+            f"0 {x} {y} {w} {h} {s}\n"
+            for x, y, w, h, s in zip(xlocs, ylocs, widths, heights, scores)
+        ]
 
     with open(path, 'wt') as f:
         f.writelines(lines)

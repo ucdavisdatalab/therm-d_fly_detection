@@ -147,9 +147,11 @@ def match_flies(args):
 
     # Load the templates.
     template_path = Path("output/fly_template.npz")
-    templates = np.load(template_path)
-    templates = list(templates.values())
+    templates, template_shape = io.read_fly_template(template_path)
     print(f"Found {len(templates)} templates at '{template_path}'.")
+
+    # TODO: Resize templates based on relative arena size. This requires info
+    # about the physical size of the arena.
 
     # Process each image.
     for path, img in dset.iter_read():
@@ -172,7 +174,7 @@ def match_flies(args):
 
         # Save to a YOLO file.
         out_path = out_dir / (str(path.stem) + ".txt")
-        io.write_yolo(out_path, boxes, scores, img.shape)
+        io.write_yolo(out_path, boxes, None, img.shape)
         print(f"Wrote '{out_path}'.")
 
 

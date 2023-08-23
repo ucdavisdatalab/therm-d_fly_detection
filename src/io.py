@@ -225,4 +225,23 @@ def write_yolo(path, boxes, scores, shape):
 
     with open(path, 'wt') as f:
         f.writelines(lines)
-            
+
+
+def read_fly_template(path):
+    """Read a collection of saved fly templates.
+
+    Arguments
+    ---------
+    path: str or Path
+        Path to an `.npz` file.
+
+    Returns
+    -------
+    out: tuple
+        A 2-tuple that contains a list of templates and the dimensions of the
+        image from which they were cropped.
+    """
+    npz = np.load(path)
+    shape = npz.get("shape")
+    templates = [v for k, v in npz.items() if k != "shape"]
+    return templates, shape

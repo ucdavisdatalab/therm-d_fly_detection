@@ -146,7 +146,7 @@ def match_flies(args):
     print(f"Found {len(dset)} images in data set '{dset_path}'.")
 
     # Load the templates.
-    template_path = Path("output/fly_template.npz")
+    template_path = Path("outputs/fly_template.npz")
     templates, template_shape = io.read_fly_template(template_path)
     print(f"Found {len(templates)} templates at '{template_path}'.")
 
@@ -212,7 +212,7 @@ def main():
             "data", type = Path, help = "path to the data set directory")
         subparser.add_argument(
             "out", type = Path, help = "path to directory to save output"
-            , default = Path("output/test/"), nargs = "?")
+            , default = Path("outputs/test/"), nargs = "?")
 
     args = parser.parse_args()
 

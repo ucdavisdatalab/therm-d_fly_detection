@@ -94,8 +94,8 @@ class FlyDatasetReader:
             else:
                 paths.append(p)
 
-        file = os.listdir(data_dir)
-        excel = [p for p in file if p.lower().endswith(('.xlsx', '.xls'))]
+        file = Path(data_dir)
+        excel = [p for p in file.iterdir() if p.suffix in ['.xlsx', '.xls']]
         if len(excel) == 0:
             warnings.warn("No Excel file found.")
             self.excel = None
@@ -103,7 +103,7 @@ class FlyDatasetReader:
             if len(excel) > 1:
                 warnings.warn(
                     "More than one Excel file found. Using the first.")
-            self.excel = data_dir + "/" + excel[0]
+            self.excel = excel[0]
 
         self.blank_paths = sorted(blank_paths)
         self.paths = sorted(paths)

@@ -65,13 +65,13 @@ def register_arenas(args):
             # img, (60, 50, 79), (120, 255, 255), close_kernel = 21
             , open_kernel = 11)
         green_squares, _ = reg.compute_squares(
-            green_mask, 3, min_aspect = 0.75, max_aspect = 1.25)
+            green_mask, 3, tol_aspect_ratio = 0.25)
 
         orange_mask = reg.mask_hsv(
             img, (5, 63, 63), (20, 255, 255), close_kernel = 21
             , open_kernel = 11)
         orange_square, _ = reg.compute_squares(
-            orange_mask, 1, min_aspect = 0.75, max_aspect = 1.25)
+            orange_mask, 1, tol_aspect_ratio = 0.25)
 
         if args.debug:
             # Save a diagnostic image.

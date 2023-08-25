@@ -87,7 +87,7 @@ def find_k_similar(x, k, sort = False):
 
 def compute_squares(
     image, n_squares, min_area_proportion = 0.0001, max_area_proportion = 0.1
-    , min_aspect = 0.8, max_aspect = 1.2
+    , tol_aspect_ratio = 0.2, tol_rect_error = 0.25
 ):
     """Compute square contours within a given mask.
 
@@ -106,11 +106,14 @@ def compute_squares(
     max_area_proportion: float
         Maximum proportion of image area for each square.
 
-    min_aspect: float
-        Minimum aspect ratio for each square.
+    tol_aspect_ratio: float
+        Tolerance for how much each square's aspect ratio can deviate from 1.
 
-    max_aspect: float
-        Maximum aspect ratio for each square.
+    tol_rect_error: float
+        Tolerance for percent error between squares and the contours on which
+        they are based. Values closer to 0 require contours to be more
+        rectangular, while values closer to 1 allow contours to be less
+        rectangular.
     """
     # Find contours in the image.
     contours, _ = cv2.findContours(
@@ -129,13 +132,13 @@ def compute_squares(
     # Eliminate contours that are not well approximated by a rect.
     rects = [cv2.boxPoints(cv2.minAreaRect(c)).astype(int) for c in contours]
     rect_areas = np.array([cv2.contourArea(r) for r in rects])
-    ok_approx = (rect_areas - areas) / rect_areas < 0.25
+    ok_approx = (rect_areas - areas) / rect_areas <= tol_rect_error
     rects = list(it.compress(rects, ok_approx))
     rect_areas = rect_areas[ok_approx]
 
     # Eliminate rects that are not approximately square.
     aspects = np.array([rect_aspect_ratio(r) for r in rects])
-    ok_aspects = (min_aspect <= aspects) & (aspects <= max_aspect)
+    ok_aspects = np.abs(1.0 - aspects) <= tol_aspect_ratio
     rects = list(it.compress(rects, ok_aspects))
     rect_areas = rect_areas[ok_aspects]
 

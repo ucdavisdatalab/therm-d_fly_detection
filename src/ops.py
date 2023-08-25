@@ -131,3 +131,38 @@ def get_perspective_transform(contour):
     ])
 
     return cv2.getPerspectiveTransform(contour, output_xy), width, height
+
+
+def rotate_contour(contour, shape, rotation):
+    """Rotate a contour within an image by a given multiple of 90 degrees.
+
+    Arguments
+    ---------
+    box: np.ndarray
+        A contour (a n-by-2 matrix where the columns are x and y coordinates,
+        respectively).
+
+    shape: tuple
+        Shape of the image (after rotation).
+
+    rotation:
+        How to rotate the contour, from OpenCV's rotation constants such as
+        `cv2.ROTATE_180`.
+    """
+    h, w, _ = shape
+    match rotation:
+        case cv2.ROTATE_90_CLOCKWISE:
+            contour = contour[[3, 0, 1, 2], ::-1].copy()
+            contour[:, 0] = w - contour[:, 0]
+            # Fix the corner sort.
+            return contour
+        case cv2.ROTATE_180:
+            contour = contour[[2, 3, 0, 1], :].copy()
+            contour[:, 0] = w - contour[:, 0]
+            contour[:, 1] = h - contour[:, 1]
+            return contour
+        case cv2.ROTATE_90_COUNTERCLOCKWISE:
+            contour = contour[[1, 2, 3, 0], ::-1].copy()
+            contour[:, 1] = h - contour[:, 1]
+        case _:
+            return contour

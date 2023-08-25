@@ -52,7 +52,6 @@ def register_arenas(args):
     print(f"Found {len(dset)} images in data set '{path}'.")
 
     # Find the registration marks.
-    orientations = []
     arenas = []
     images = []
     for path, img in dset.iter_read():
@@ -82,11 +81,16 @@ def register_arenas(args):
 
         # Get orientation and arena bounds.
         orient, arena = reg.orient_and_bound(orange_square, green_squares)
+
+        # Orient the image and the arena.
+        if orient is not None:
+            img = cv2.rotate(img, orient)
+            arena = ops.rotate_contour(arena, img.shape, orient)
+
         print(f"{orient=}\n{arena=}")
-        orientations.append(orient)
-        arenas.append(arena.ravel())
 
         images.append(img)
+        arenas.append(arena)
 
     # Compute median arena position. No need to convert to int since the
     # perspective transformation requires float inputs.
@@ -98,15 +102,11 @@ def register_arenas(args):
     print(f"{width=}, {height=}")
 
     # Extract and save the arenas.
-    for path, img, orient in zip(dset, images, orientations):
+    for path, img in zip(dset, images):
         img = cv2.warpPerspective(
             img, transform, (width, height), flags = cv2.INTER_CUBIC)
 
         print(f"{path=}, {img.shape}")
-
-        # Orient the image.
-        if orient:
-            img = cv2.rotate(img, orient)
 
         # Save the new image (or save metadata about the orientation and
         # perspective).

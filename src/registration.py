@@ -4,6 +4,8 @@
 import cv2
 import numpy as np
 
+import itertools as it
+
 
 def orient_and_bound(alignment_mark, position_marks):
     """Compute orientation and corners of a fly arena from its (orange)
@@ -61,13 +63,6 @@ def arg_corner_sort(points):
     return np.squeeze(order)
 
 
-def aspect_ratio(contour):
-    """Compute the aspect ratio (width / height) of a given contour.
-    """
-    _, _, w, h = cv2.boundingRect(contour)
-    return w / h
-
-
 def find_k_similar(x, k, sort = False):
     """Find positions and values of the k most similar adjacent values in an
     array.
@@ -121,44 +116,53 @@ def compute_squares(
     contours, _ = cv2.findContours(
         image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Check that contour aspect ratios are near 1 and areas are not too small
-    # or large.
-    h, w = image.shape[:2]
-    image_area = h * w
-    min_area = image_area * min_area_proportion
-    max_area = image_area * max_area_proportion
-    # print(f"{h=}, {w=}")
+    # Eliminate contours that are too large.
+    image_area = image.shape[0] * image.shape[1]
+    min_area = min_area_proportion * image_area
+    max_area = max_area_proportion * image_area
 
-    area = np.array([cv2.contourArea(c) for c in contours])
-    ar = np.array([aspect_ratio(c) for c in contours])
-    is_ok = (min_area < area) & (area < max_area)
-    is_ok &= (min_aspect < ar) & (ar < max_aspect)
-    contours = [x for i, x in enumerate(contours) if is_ok[i]]
-    area = area[is_ok]
+    areas = np.array([cv2.contourArea(c) for c in contours])
+    ok_areas = (min_area <= areas) & (areas <= max_area)
+    contours = list(it.compress(contours, ok_areas))
+    areas = areas[ok_areas]
 
-    if len(contours) < n_squares:
-        raise ValueError(f"Only {len(contours)} contours found.")
+    # Eliminate contours that are not well approximated by a rect.
+    rects = [cv2.boxPoints(cv2.minAreaRect(c)).astype(int) for c in contours]
+    rect_areas = np.array([cv2.contourArea(r) for r in rects])
+    ok_approx = (rect_areas - areas) / rect_areas < 0.25
+    rects = list(it.compress(rects, ok_approx))
+    rect_areas = rect_areas[ok_approx]
+
+    # Eliminate rects that are not approximately square.
+    aspects = np.array([rect_aspect_ratio(r) for r in rects])
+    ok_aspects = (min_aspect <= aspects) & (aspects <= max_aspect)
+    rects = list(it.compress(rects, ok_aspects))
+    rect_areas = rect_areas[ok_aspects]
 
     # Sort by area (largest to smallest) and get n_squares with the most
     # similar areas.
-    if len(contours) > 1:
-        ix = np.argsort(-area)
-        area = area[ix]
-        contours = [contours[i] for i in ix]
+    if len(rects) > n_squares:
+        ix = np.argsort(-rect_areas)
+        rect_areas = rect_areas[ix]
+        rects = [rects[i] for i in ix]
 
     if n_squares > 1:
-        ix, area = find_k_similar(area, n_squares)
-        contours = contours[ix:ix + n_squares]
+        ix, rect_areas = find_k_similar(rect_areas, n_squares)
+        rects = rects[ix:ix + n_squares]
     else:
-        # Get largest contour.
-        contours = contours[:1]
+        rects = rects[:1]
 
-    # Find smallest rotated rectangle enclosing the contour.
-    contours = [
-        cv2.boxPoints(cv2.minAreaRect(x)).astype(int)
-        for x in contours]
+    return rects, rect_areas
 
-    return contours, area
+
+def rect_aspect_ratio(rect):
+    """Compute the aspect ratio of a rectangle.
+    """
+    # Compute distance from one corner to all others.
+    dists = np.linalg.norm(rect[0, :] - rect[1:, :], axis = 1)
+    # Aspect ratio is ratio of two shortest distances.
+    dists.sort()
+    return dists[0] / dists[1]
 
 
 def mask_hsv(

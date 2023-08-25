@@ -7,7 +7,6 @@ import pandas as pd
 
 from .ops import rescale
 
-import os
 from pathlib import Path
 import warnings
 
@@ -72,8 +71,10 @@ class FlyDatasetReader:
         blank_pattern: str
             Case-insensitive pattern for "blank" no-flies images.
         """
+        data_dir = Path(data_dir)
+
         # Make sure there's a `photos/` directory.
-        photos_dir = Path(data_dir) / "photos"
+        photos_dir = data_dir / "photos"
         if not photos_dir.is_dir():
             raise FileNotFoundError(
                 f"Directory '{photos_dir}' does not exist.")
@@ -94,8 +95,9 @@ class FlyDatasetReader:
             else:
                 paths.append(p)
 
-        file = Path(data_dir)
-        excel = [p for p in file.iterdir() if p.suffix in ['.xlsx', '.xls']]
+        excel = [
+            p for p in data_dir.iterdir()
+            if p.suffix.lower() in ['.xlsx', '.xls']]
         if len(excel) == 0:
             warnings.warn("No Excel file found.")
             self.excel = None

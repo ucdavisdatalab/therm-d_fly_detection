@@ -27,31 +27,39 @@ def register_arenas(args):
     """Register the fly arenas.
     """
     # TODO:
-    #   + Standardize image brightness
     #   + Expose mask_hsv parameters
+
+    # Read the data set.
+    data_dir = args.data
+    print(f"Data set directory: '{data_dir}'")
+    if not data_dir.is_dir():
+        raise IOError(f"'{data_dir}' is not a directory.")
+
+    dset = FlyDatasetReader(data_dir)
+    print(f"  Found {len(dset)} images.\n")
 
     # Make sure the output directory exists.
     out_dir = args.out
-    print(f"Output directory: {out_dir}")
+    if out_dir is None:
+        out_dir = Path("outputs") / data_dir.name / "photos"
+    print(f"Output directory: '{out_dir}'")
+
     out_dir.mkdir(parents = True, exist_ok = True)
     if next(out_dir.iterdir(), None):
-        msg = (f"Directory '{out_dir}' contains files. "
+        msg = ("Output directory contains files. "
                "Continue and possibly overwrite (y/n)? ")
         if not prompt_yes(msg):
             sys.exit(1)
+    print()
 
-    debug_dir = out_dir / "debug"
-    debug_dir.mkdir(exist_ok = True)
-
-    # Read the data set.
-    path = args.data
-    if not path.is_dir():
-        raise IOError(f"'{path}' is not a valid path to a directory")
-
-    dset = FlyDatasetReader(path)
-    print(f"Found {len(dset)} images in data set '{path}'.")
+    if args.debug:
+        debug_dir = out_dir / "debug"
+        debug_dir.mkdir(exist_ok = True)
+        print(f"Debug directory: '{debug_dir}'\n")
 
     # Find the registration marks.
+    print("Finding registration marks...\n")
+
     arenas = []
     images = []
     for path, img in dset.iter_read():
@@ -92,26 +100,30 @@ def register_arenas(args):
             img = cv2.rotate(img, orient)
             arena = ops.rotate_contour(arena, img.shape, orient)
 
-        print(f"{orient=}\n{arena=}")
+        print(f"{orient=}\n{arena=}\n")
 
         images.append(img)
         arenas.append(arena)
 
     # Compute median arena position. No need to convert to int since the
     # perspective transformation requires float inputs.
+    print("Computing median arena boundary...\n")
+
     arenas = np.stack(arenas)
     m_arena = np.median(arenas, axis = 0).reshape(-1, 2)
     print(f"{m_arena=}")
 
     transform, width, height = ops.get_perspective_transform(m_arena)
-    print(f"{width=}, {height=}")
+    print(f"{width=}, {height=}\n")
 
     # Extract and save the arenas.
+    print("Extracting and saving arenas...\n")
+
     for path, img in zip(dset, images):
         img = cv2.warpPerspective(
             img, transform, (width, height), flags = cv2.INTER_CUBIC)
 
-        print(f"{path=}, {img.shape}")
+        #print(f"{path=}, {img.shape}")
 
         # Save the new image (or save metadata about the orientation and
         # perspective).
@@ -126,46 +138,55 @@ def match_flies(args):
     """
     # TODO:
     #   + Scale templates according to size of image
-    #   + Standardize image brightness
     #   + Expose match.extract parameters
+
+    # Read the data set.
+    data_dir = args.data
+    print(f"Data set directory: '{data_dir}'")
+    if not data_dir.is_dir():
+        raise IOError(f"'{data_dir}' is not a directory.")
+
+    dset = FlyDatasetReader(data_dir)
+    print(f"  Found {len(dset)} images.\n")
 
     # Make sure the output directory exists.
     out_dir = args.out
-    print(f"Output directory: {out_dir}")
+    if out_dir is None:
+        out_dir = Path("outputs") / data_dir.name / "labels"
+    print(f"Output directory: '{out_dir}'")
+
     out_dir.mkdir(parents = True, exist_ok = True)
     if next(out_dir.iterdir(), None):
-        msg = (f"Directory '{out_dir}' contains files. "
+        msg = ("Output directory contains files. "
                "Continue and possibly overwrite (y/n)? ")
         if not prompt_yes(msg):
             sys.exit(1)
+    print()
 
-    debug_dir = out_dir / "debug"
-    debug_dir.mkdir(exist_ok = True)
-
-    # Read the data set.
-    dset_path = args.data
-    if not dset_path.is_dir():
-        raise IOError(f"'{dset_path}' is not a valid path to a directory")
-
-    dset = FlyDatasetReader(dset_path)
-    print(f"Found {len(dset)} images in data set '{dset_path}'.")
+    if args.debug:
+        debug_dir = out_dir / "debug"
+        debug_dir.mkdir(exist_ok = True)
+        print(f"Debug directory: '{debug_dir}'\n")
 
     # Load the templates.
     template_path = Path("outputs/fly_template.npz")
+    print(f"Template path: '{template_path}'")
     templates, template_shape = io.read_fly_template(template_path)
-    print(f"Found {len(templates)} templates at '{template_path}'.")
+    print(f"  Found {len(templates)} template images.\n")
 
     # TODO: Resize templates based on relative arena size. This requires info
     # about the physical size of the arena.
 
     # Process each image.
+    print("Processing images...\n")
+
     for path, img in dset.iter_read():
-        print(f"\nProcessing '{path}'.")
+        print(f"Processing '{path}'.")
         # Run template matching.
         boxes, scores = match.concatenate(
             [match.extract(img, t, verbose = args.debug) for t in templates])
         boxes = match.suppress_nonmax(boxes, scores)
-        print(f"Found {boxes.shape[0]} boxes.")
+        print(f"  Found {boxes.shape[0]} boxes.")
 
         if args.debug:
             # Output a diagnostic image.
@@ -175,12 +196,12 @@ def match_flies(args):
                 viz.plot_box(boxes[i, :], ax)
             debug_path = debug_dir / path.name
             plt.savefig(debug_path, bbox_inches = "tight")
-            print(f"Wrote '{debug_path}'.")
+            print(f"  Wrote '{debug_path}'.")
 
         # Save to a YOLO file.
         out_path = out_dir / (str(path.stem) + ".txt")
         io.write_yolo(out_path, boxes, None, img.shape)
-        print(f"Wrote '{out_path}'.")
+        print(f"  Wrote '{out_path}'.\n")
 
 
 def prompt_yes(prompt):
@@ -217,7 +238,7 @@ def main():
             "data", type = Path, help = "path to the data set directory")
         subparser.add_argument(
             "out", type = Path, help = "path to directory to save output"
-            , default = Path("outputs/test/"), nargs = "?")
+            , nargs = "?")
 
     args = parser.parse_args()
 

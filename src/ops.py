@@ -5,6 +5,35 @@ import cv2
 import numpy as np
 
 
+def adaptive_gamma_correction(image, verbose = False, tau = 3):
+    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    # Compute mean and sd to determine case.
+    mean = np.mean(hsv[:, :, 2]) / 255.0
+    sd = np.mean(hsv[:, :, 2]) / 255.0
+
+    if sd <= 0.25 / tau:  # 4*sd <= 1/tau
+        # Low contrast case.
+        gamma = -np.log2(sd)
+    else:
+        # High contrast case.
+        gamma = np.exp(0.5 * (1 - mean - sd))
+
+    if verbose:
+        print(f"{mean=}, {sd=}, {gamma=}")
+        print(f"Low contrast: {sd <= 0.25 / tau}, Dark: {mean < 0.5}")
+
+    # TODO: Possibly faster to use a lookup table.
+    v_out = np.power(hsv[:, :, 2] / 255.0, gamma)
+    if mean < 0.5:
+        # Dark case. In the bright case, the scaling factor c = 1 leaves the
+        # output unchanged.
+        np.divide(v_out, v_out + (1 - v_out) * mean**gamma, out = v_out)
+
+    # Convert back to [0, 255] (uint8) and then back to RGB.
+    hsv[:, :, 2] = np.rint(np.clip(v_out * 255, 0, 255)).astype(np.uint8)
+    return cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+
+
 def gamma_transform(
     image, gamma = None, gamma_quantile = 0.25, verbose = False
 ):

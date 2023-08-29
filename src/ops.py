@@ -28,8 +28,9 @@ def gamma_transform(
     if gamma is None:
         # Estimate gamma.
         gamma = np.log(np.quantile(image, gamma_quantile)) / np.log(128)
-        if verbose:
-            print(f"Estimated gamma: {gamma:.2f}")
+
+    if verbose:
+        print(f"Gamma: {gamma:.2f}")
 
     # Use a lookup table to quickly compute the new pixel values.
     lookup_table = np.empty((1, 256), np.uint8)

@@ -66,7 +66,7 @@ def register_arenas(args):
         print(path)
 
         # Standardize brightness across images.
-        img = ops.gamma_transform(img, gamma_quantile = 0.5)
+        img = ops.adaptive_gamma_correction(img)
 
         green_mask = reg.mask_hsv(
             img, (60, 63, 63), (120, 255, 255), close_kernel = 21

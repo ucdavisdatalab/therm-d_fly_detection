@@ -68,18 +68,20 @@ def register_arenas(args):
         # Standardize brightness across images.
         img = ops.adaptive_gamma_correction(img)
 
+        hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)[:, :, 1:]
+        qv = np.quantile(hsv[:, :, 1].ravel(), 0.45)
+
         green_mask = reg.mask_hsv(
-            img, (60, 63, 63), (120, 255, 255), close_kernel = 21
-            # img, (60, 50, 79), (120, 255, 255), close_kernel = 21
-            , open_kernel = 11)
+            img, (70, 63, 95), (85, 255, 255), close_kernel = 21
+            , open_kernel = 3)
         green_squares, _ = reg.compute_squares(
-            green_mask, 3, tol_aspect_ratio = 0.25)
+            green_mask, 3, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
 
         orange_mask = reg.mask_hsv(
-            img, (5, 63, 63), (20, 255, 255), close_kernel = 21
-            , open_kernel = 11)
+            img, (0, 95, qv), (15, 255, 255), close_kernel = 21
+            , open_kernel = 3)
         orange_square, _ = reg.compute_squares(
-            orange_mask, 1, tol_aspect_ratio = 0.25)
+            orange_mask, 1, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
 
         if args.debug:
             # Save a diagnostic image.

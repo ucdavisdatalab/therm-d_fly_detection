@@ -76,12 +76,17 @@ def register_arenas(args):
             , open_kernel = 3)
         green_squares, _ = reg.compute_squares(
             green_mask, 3, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
+        if len(green_squares) < 3:
+            raise RuntimeError("Could not find 3 green registration marks"
+                               f" ({len(green_squares)} found).")
 
         orange_mask = reg.mask_hsv(
             adj_img, (0, 95, qv), (15, 255, 255), close_kernel = 21
             , open_kernel = 3)
         orange_square, _ = reg.compute_squares(
             orange_mask, 1, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
+        if len(orange_square) != 1:
+            raise RuntimeError("Could not find orange registration mark.")
 
         if args.debug:
             # Save a diagnostic image.

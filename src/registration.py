@@ -149,13 +149,11 @@ def compute_squares(
         rect_areas = rect_areas[ix]
         rects = [rects[i] for i in ix]
 
-    if n_squares > 1:
-        ix, rect_areas = find_k_similar(rect_areas, n_squares)
-        rects = rects[ix:ix + n_squares]
-    else:
-        rects = rects[:1]
+        if n_squares > 1:
+            ix, rect_areas = find_k_similar(rect_areas, n_squares)
+            rects = rects[ix:]
 
-    return rects, rect_areas
+    return rects[:n_squares], rect_areas
 
 
 def rect_aspect_ratio(rect):

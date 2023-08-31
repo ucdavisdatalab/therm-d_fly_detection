@@ -66,19 +66,19 @@ def register_arenas(args):
         print(path)
 
         # Standardize brightness across images.
-        img = ops.adaptive_gamma_correction(img)
+        adj_img = ops.adaptive_gamma_correction(img)
 
-        hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)[:, :, 1:]
+        hsv = cv2.cvtColor(adj_img, cv2.COLOR_RGB2HSV)[:, :, 1:]
         qv = np.quantile(hsv[:, :, 1].ravel(), 0.45)
 
         green_mask = reg.mask_hsv(
-            img, (70, 63, 95), (85, 255, 255), close_kernel = 21
+            adj_img, (70, 63, 95), (85, 255, 255), close_kernel = 21
             , open_kernel = 3)
         green_squares, _ = reg.compute_squares(
             green_mask, 3, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
 
         orange_mask = reg.mask_hsv(
-            img, (0, 95, qv), (15, 255, 255), close_kernel = 21
+            adj_img, (0, 95, qv), (15, 255, 255), close_kernel = 21
             , open_kernel = 3)
         orange_square, _ = reg.compute_squares(
             orange_mask, 1, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
@@ -86,7 +86,7 @@ def register_arenas(args):
         if args.debug:
             # Save a diagnostic image.
             preview = cv2.drawContours(
-                img.copy(), green_squares, -1, (0, 255, 0), 3)
+                adj_img.copy(), green_squares, -1, (0, 255, 0), 3)
             preview = cv2.drawContours(
                 preview, orange_square, -1, (255, 0, 0), 3)
 
@@ -126,6 +126,7 @@ def register_arenas(args):
             img, transform, (width, height), flags = cv2.INTER_CUBIC)
 
         #print(f"{path=}, {img.shape}")
+        img = ops.adaptive_gamma_correction(img)
 
         # Save the new image (or save metadata about the orientation and
         # perspective).

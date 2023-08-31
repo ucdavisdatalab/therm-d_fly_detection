@@ -73,7 +73,7 @@ def register_arenas(args):
 
         green_mask = reg.mask_hsv(
             adj_img, (70, 63, 95), (85, 255, 255), close_kernel = 21
-            , open_kernel = 3)
+            , open_kernel = 7)
         green_squares, _ = reg.compute_squares(
             green_mask, 3, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
         if len(green_squares) < 3:

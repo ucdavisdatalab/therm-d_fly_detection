@@ -188,6 +188,7 @@ class FlyDatasetReader:
         df = df[1:3]
         df = df.set_index('temperature probe')
         df = df.to_numpy()
+        self.temps = df
         return df
 
 

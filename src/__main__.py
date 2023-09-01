@@ -211,6 +211,15 @@ def match_flies(args):
         io.write_yolo(out_path, boxes, None, img.shape)
         print(f"  Wrote '{out_path}'.\n")
 
+    fly_label = f'{out_dir}/labels.txt'
+    with open(fly_label, mode = 'wt') as file:
+        file.write('fly')
+    
+
+
+
+
+
 
 def prompt_yes(prompt):
     """Prompt the user with a yes or no question and return True if they

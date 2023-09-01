@@ -216,11 +216,6 @@ def match_flies(args):
         file.write('fly')
     
 
-
-
-
-
-
 def prompt_yes(prompt):
     """Prompt the user with a yes or no question and return True if they
     respond yes.

@@ -7,20 +7,20 @@ Currently, this module only runs step 1 of these steps:
 3. Estimate the temperatures of the detected flies.
 """
 
+from argparse import ArgumentParser
+from pathlib import Path
+import sys
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .io import FlyDatasetReader
+from . import cli
 from . import io
 from . import match
 from . import ops
 from . import registration as reg
 from . import viz
-
-from argparse import ArgumentParser
-from pathlib import Path
-import sys
 
 
 def register_arenas(args):
@@ -35,7 +35,7 @@ def register_arenas(args):
     if not data_dir.is_dir():
         raise IOError(f"'{data_dir}' is not a directory.")
 
-    dset = FlyDatasetReader(data_dir)
+    dset = io.FlyDatasetReader(data_dir)
     print(f"  Found {len(dset)} images.\n")
 
     # Make sure the output directory exists.
@@ -48,7 +48,7 @@ def register_arenas(args):
     if next(out_dir.iterdir(), None):
         msg = ("Output directory contains files. "
                "Continue and possibly overwrite (y/n)? ")
-        if not prompt_yes(msg):
+        if not cli.prompt_yes(msg):
             sys.exit(1)
     print()
 
@@ -154,7 +154,7 @@ def match_flies(args):
     if not data_dir.is_dir():
         raise IOError(f"'{data_dir}' is not a directory.")
 
-    dset = FlyDatasetReader(data_dir)
+    dset = io.FlyDatasetReader(data_dir)
     print(f"  Found {len(dset)} images.\n")
 
     # Make sure the output directory exists.
@@ -167,7 +167,7 @@ def match_flies(args):
     if next(out_dir.iterdir(), None):
         msg = ("Output directory contains files. "
                "Continue and possibly overwrite (y/n)? ")
-        if not prompt_yes(msg):
+        if not cli.prompt_yes(msg):
             sys.exit(1)
     print()
 
@@ -214,18 +214,6 @@ def match_flies(args):
     fly_label = f'{out_dir}/labels.txt'
     with open(fly_label, mode = 'wt') as file:
         file.write('fly')
-    
-
-def prompt_yes(prompt):
-    """Prompt the user with a yes or no question and return True if they
-    respond yes.
-    """
-    while True:
-        match input(prompt).lower():
-            case "y" | "yes":
-                return True
-            case "n" | "no":
-                return False
 
 
 def main():

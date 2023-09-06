@@ -129,10 +129,8 @@ class FlyDatasetReader:
         image: numpy.ndarray
             The image in RGB format.
         """
-        if "max_size" not in kwargs:
-            kwargs["max_size"] = self.max_size
-        for path in self:
-            yield path, read_image(path, **kwargs)
+        for i in range(len(self)):
+            yield self.read(i, **kwargs)
 
     def read(self, index, **kwargs):
         """Read a single image from the data set.
@@ -152,8 +150,8 @@ class FlyDatasetReader:
         """
         if "max_size" not in kwargs:
             kwargs["max_size"] = self.max_size
-        p = self.paths[index]
-        return read_image(p, **kwargs)
+        path = self.paths[index]
+        return path, read_image(path, **kwargs)
 
     def read_blank(self, index = 0, **kwargs):
         """Read a single "blank" no-flies image from the data set.

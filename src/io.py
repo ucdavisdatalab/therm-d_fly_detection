@@ -79,7 +79,9 @@ class FlyDatasetReader:
             raise FileNotFoundError(
                 f"Directory '{photos_dir}' does not exist.")
 
-        # Get all images.
+        self.max_size = max_size
+
+        # Locate photos.
         suffixes = [s.lower() for s in suffixes]
         blank_paths = []
         paths = []
@@ -87,29 +89,39 @@ class FlyDatasetReader:
             # Ignore files with incorrect suffixes.
             if p.suffix.lower() not in suffixes:
                 continue
-
-            # Check whether filename contains pattern for "blank" no flies
-            # images.
+            # Check whether filename contains "blank" (a no flies image).
             if blank_pattern and blank_pattern in p.stem.lower():
                 blank_paths.append(p)
             else:
                 paths.append(p)
 
-        excel = [
-            p for p in data_dir.iterdir()
-            if p.suffix.lower() in ['.xlsx', '.xls']]
-        if len(excel) == 0:
-            warnings.warn("No Excel file found.")
-            self.excel = None
-        else:
-            if len(excel) > 1:
-                warnings.warn(
-                    "More than one Excel file found. Using the first.")
-            self.excel = excel[0]
-
         self.blank_paths = sorted(blank_paths)
         self.paths = sorted(paths)
-        self.max_size = max_size
+
+        # Locate labels.
+        labels_dir = data_dir / "labels"
+        label_paths = []
+        if not labels_dir.is_dir():
+            warnings.warn(f"Directory '{labels_dir}' does not exist.")
+        else:
+            image_stems = [p.stem for p in paths]
+            for p in labels_dir.iterdir():
+                if p.suffix.lower() not in (".txt"):
+                    continue
+                # Check that the label corresponds to a photo.
+                if p.stem not in image_stems:
+                    warnings.warn(f"No photo for label file '{p}'.")
+                    continue
+                label_paths.append(p)
+
+        self.label_paths = sorted(label_paths)
+
+        # Locate the Excel file.
+        self.excel_paths = [
+            p for p in data_dir.iterdir()
+            if p.suffix.lower() in ('.xlsx', '.xls')]
+        if len(self.excel_paths) == 0:
+            warnings.warn("No Excel file in this data set.")
 
     def __len__(self):
         return len(self.paths)
@@ -148,6 +160,9 @@ class FlyDatasetReader:
         image: numpy.ndarray
             The image in RGB format.
         """
+        if len(self) == 0:
+            raise RuntimeError("No photos in this data set.")
+
         if "max_size" not in kwargs:
             kwargs["max_size"] = self.max_size
         path = self.paths[index]
@@ -176,17 +191,29 @@ class FlyDatasetReader:
             kwargs["max_size"] = self.max_size
         return read_image(self.blank_paths[index], **kwargs)
 
-    def read_sheet_temperatures(self):
-        if self.excel is None:
-            raise RuntimeError("No Excel file found.")
-        df = pd.read_excel(self.excel)
+    def read_sheet_temperatures(self, index = 0):
+        """Read temperatures from an Excel file.
+
+        Arguments
+        ---------
+        index: int
+            An index into the list of Excel files.
+
+        Returns
+        -------
+        """
+        if len(self.excel_paths) == 0:
+            raise RuntimeError("No Excel file in this data set.")
+
+        excel_path = self.excel_paths[index]
+        df = pd.read_excel(excel_path)
         ind = df[df.iloc[:, 0] == 'temperature probe'].index[0]
         df = df[ind:ind + 3].dropna(axis = 1)
         df.columns = df.iloc[0]
         df = df[1:3]
         df = df.set_index('temperature probe')
         df = df.to_numpy()
-        self.temps = df
+        self.temperatures = df
         return df
 
 

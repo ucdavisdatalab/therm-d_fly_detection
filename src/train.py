@@ -7,6 +7,7 @@ import sys
 import tomllib
 
 import pandas as pd
+from sklearn.model_selection import train_test_split
 import yaml
 
 from . import cli
@@ -69,6 +70,39 @@ def assemble_training_set(args):
 
     data_dir = Path(config["data_dir"])
 
+    # Assemble file metadata.
+    count = 0
+    metadata = []
+    for name in sorted(config["datasets"]):
+        dataset = io.FlyDatasetReader(data_dir / name)
+        apparatus = name.rsplit("_", 1)[-1]
+
+        # FIXME: image and labels could be out of correspondence if there are
+        # no labels for some images.
+        for image_path, label_path in zip(dataset, dataset.label_paths):
+            metadata.append({
+                "id": count
+                , "source_image": image_path, "source_label": label_path
+                , "apparatus": apparatus
+            })
+            count += 1
+
+    metadata = pd.DataFrame(metadata)
+    print(f"Found {metadata.shape[0]} image and label file pairs.")
+
+    # Assign each file to train set or validation set.
+    train, vdate = train_test_split(
+        metadata["id"], shuffle = True
+        , test_size = config["test_size"]
+        , random_state = config["seed"]
+        , stratify = metadata["apparatus"])
+
+    metadata["train_set"] = None
+    metadata.loc[metadata["id"].isin(train), "train_set"] = "train"
+    metadata.loc[metadata["id"].isin(vdate), "train_set"] = "val"
+
+    print(pd.crosstab(metadata["apparatus"], metadata["train_set"]))
+
     # Make directories for the training data set.
     out_dir = config.get("out_dir", Path("outputs") / training_set_name)
     out_dir = Path(out_dir)
@@ -79,45 +113,37 @@ def assemble_training_set(args):
         if not cli.prompt_yes(msg):
             sys.exit(1)
 
-    out_images_dir = out_dir / "images" / "train"
-    out_images_dir.mkdir(parents = True, exist_ok = True)
-    out_labels_dir = out_dir / "labels" / "train"
-    out_labels_dir.mkdir(parents = True, exist_ok = True)
+    out_images_dir = out_dir / "images"
+    (out_images_dir / "train").mkdir(exist_ok = True, parents = True)
+    (out_images_dir / "val").mkdir(exist_ok = True, parents = True)
+
+    out_labels_dir = out_dir / "labels"
+    (out_labels_dir / "train").mkdir(exist_ok = True, parents = True)
+    (out_labels_dir / "val").mkdir(exist_ok = True, parents = True)
+
+    # Generate paths.
+    def make_path(row, source, base):
+        name = f"{row['id']:04}" + Path(row[source]).suffix.lower()
+        return base / row["train_set"] / name
+
+    metadata["linked_image"] = metadata.apply(
+        make_path, axis = 1, args = ("source_image", out_images_dir))
+    metadata["linked_label"] = metadata.apply(
+        make_path, axis = 1, args = ("source_label", out_labels_dir))
 
     print("\nLinking files:")
 
     # Link in the images and labels.
-    count = 0
-    crosswalk = []
-    for name in sorted(config["datasets"]):
-        dataset = io.FlyDatasetReader(data_dir / name)
+    for _, row in metadata.iterrows():
+        out_path = Path(row["linked_image"])
+        out_path.unlink(missing_ok = True)
+        out_path.hardlink_to(row["source_image"])
+        print(f"  '{row['source_image']}' -> '{out_path}'")
 
-        for i, p in enumerate(dataset):
-            # Link to image file.
-            out_path = out_images_dir / (f"{count:04}" + p.suffix.lower())
-            out_path.unlink(missing_ok = True)
-            out_path.hardlink_to(p)
-            print(f"  '{p}' -> '{out_path}'")
-
-            # Check for and link to label file.
-            label_path = dataset.label_paths[i]
-            metadata = {
-                "id": count
-                , "source_photo": p, "source_label": label_path
-                , "linked_photo": out_path
-            }
-
-            out_path = out_labels_dir / (
-                f"{count:04}" + label_path.suffix.lower())
-            out_path.unlink(missing_ok = True)
-            out_path.hardlink_to(label_path)
-            print(f"  '{label_path}' -> '{out_path}'\n")
-
-            metadata["linked_label"] = out_path
-            crosswalk.append(metadata)
-            count += 1
-
-    print(f"Linked {count} files.")
+        out_path = Path(row["linked_label"])
+        out_path.unlink(missing_ok = True)
+        out_path.hardlink_to(row["source_label"])
+        print(f"  '{row['source_label']}' -> '{out_path}'\n")
 
     # Create a YAML file.
     yolo_metadata = {
@@ -133,10 +159,9 @@ def assemble_training_set(args):
     print(f"Wrote YAML file '{out_path}'.")
 
     # Save the crosswalk for the linked files as a CSV.
-    out_path = out_dir / "crosswalk.csv"
-    crosswalk = pd.DataFrame(crosswalk)
-    crosswalk.to_csv(out_path, index = False)
-    print(f"Wrote crosswalk '{out_path}'.")
+    out_path = out_dir / "metadata.csv"
+    metadata.to_csv(out_path, index = False)
+    print(f"Wrote metadata '{out_path}'.")
 
 
 if __name__ == "__main__":

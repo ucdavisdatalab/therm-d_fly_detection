@@ -73,7 +73,3 @@ def assemble_training_set(args):
     crosswalk = pd.DataFrame(crosswalk)
     crosswalk.to_csv(out_path, index = False)
     print(f"Wrote crosswalk '{out_path}'.")
-
-
-if __name__ == "__main__":
-    main()

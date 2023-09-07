@@ -6,6 +6,7 @@ import sys
 import tomllib
 
 import pandas as pd
+import yaml
 
 from . import cli
 from . import io
@@ -17,22 +18,25 @@ def assemble_training_set(args):
     # Read the config file.
     with open(args.config, "rb") as f:
         config = tomllib.load(f)
+    # Use global config `name` if `name` isn't set in the assemble section.
+    training_set_name = config["assemble"].get("name", config["name"])
+    config = config["assemble"]
 
-    config = config["training"]
     data_dir = Path(config["data_dir"])
 
-    # Make a directory for the training data.
-    out_dir = Path(config["assembly_dir"])
+    # Make directories for the training data set.
+    out_dir = config.get("out_dir", Path("outputs") / training_set_name)
+    out_dir = Path(out_dir)
     print(f"Output directory: '{out_dir}'")
-    if next(out_dir.iterdir(), None):
+    if out_dir.is_dir() and next(out_dir.iterdir(), None):
         msg = ("Output directory contains files. "
                "Continue and possibly overwrite (y/n)? ")
         if not cli.prompt_yes(msg):
             sys.exit(1)
 
-    out_photos_dir = out_dir / "photos"
-    out_photos_dir.mkdir(parents = True, exist_ok = True)
-    out_labels_dir = out_dir / "labels"
+    out_images_dir = out_dir / "images" / "train"
+    out_images_dir.mkdir(parents = True, exist_ok = True)
+    out_labels_dir = out_dir / "labels" / "train"
     out_labels_dir.mkdir(parents = True, exist_ok = True)
 
     print("\nLinking files:")
@@ -45,7 +49,7 @@ def assemble_training_set(args):
 
         for i, p in enumerate(dataset):
             # Link to image file.
-            out_path = out_photos_dir / (f"{count:04}" + p.suffix)
+            out_path = out_images_dir / (f"{count:04}" + p.suffix)
             out_path.unlink(missing_ok = True)
             out_path.hardlink_to(p)
             print(f"  '{p}' -> '{out_path}'")
@@ -68,6 +72,20 @@ def assemble_training_set(args):
             count += 1
 
     print(f"Linked {count} files.")
+
+    # Create a YAML file.
+    yolo_metadata = {
+        "path": ""
+        , "train": "images/train"
+        , "val": "images/val"
+        , "test": ""
+        , "names": {0: "fly"}
+    }
+    out_path = out_dir / (training_set_name + ".yaml")
+    with open(out_path, "wt") as f:
+        yaml.dump(yolo_metadata, f)
+    print(f"Wrote YAML file '{out_path}'.")
+
     # Save the crosswalk for the linked files as a CSV.
     out_path = out_dir / "crosswalk.csv"
     crosswalk = pd.DataFrame(crosswalk)

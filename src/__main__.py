@@ -20,6 +20,7 @@ from . import io
 from . import match
 from . import ops
 from . import registration as reg
+from . import train
 from . import viz
 
 
@@ -233,12 +234,21 @@ def main():
         "match", help = "apply template matching to data set")
     match_parser.set_defaults(func = match_flies)
 
+    # Add `data` and `out` arguments to all subparsers defined before this
+    # point.
     for name, subparser in subparsers.choices.items():
         subparser.add_argument(
             "data", type = Path, help = "path to the data set directory")
         subparser.add_argument(
             "out", type = Path, help = "path to directory to save output"
             , nargs = "?")
+
+    assemble_parser = subparsers.add_parser(
+        "assemble", help = "assemble a YOLO object detection training set "
+        "from multiple annotated data sets")
+    assemble_parser.set_defaults(func = train.assemble_training_set)
+    assemble_parser.add_argument(
+        "config", type = Path, help ="path to config file")
 
     args = parser.parse_args()
 

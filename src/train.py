@@ -11,10 +11,11 @@ from . import cli
 from . import io
 
 
-def main():
+def assemble_training_set(args):
+    """Assemble a (YOLO) training set from multiple annotated data sources.
+    """
     # Read the config file.
-    PATH = "configs/test.toml"
-    with open(PATH, "rb") as f:
+    with open(args.config, "rb") as f:
         config = tomllib.load(f)
 
     config = config["training"]
@@ -22,6 +23,7 @@ def main():
 
     # Make a directory for the training data.
     out_dir = Path(config["assembly_dir"])
+    print(f"Output directory: '{out_dir}'")
     if next(out_dir.iterdir(), None):
         msg = ("Output directory contains files. "
                "Continue and possibly overwrite (y/n)? ")

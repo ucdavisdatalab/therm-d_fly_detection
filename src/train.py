@@ -49,7 +49,7 @@ def assemble_training_set(args):
 
         for i, p in enumerate(dataset):
             # Link to image file.
-            out_path = out_images_dir / (f"{count:04}" + p.suffix)
+            out_path = out_images_dir / (f"{count:04}" + p.suffix.lower())
             out_path.unlink(missing_ok = True)
             out_path.hardlink_to(p)
             print(f"  '{p}' -> '{out_path}'")
@@ -62,7 +62,8 @@ def assemble_training_set(args):
                 , "linked_photo": out_path
             }
 
-            out_path = out_labels_dir / (f"{count:04}" + label_path.suffix)
+            out_path = out_labels_dir / (
+                f"{count:04}" + label_path.suffix.lower())
             out_path.unlink(missing_ok = True)
             out_path.hardlink_to(label_path)
             print(f"  '{label_path}' -> '{out_path}'\n")

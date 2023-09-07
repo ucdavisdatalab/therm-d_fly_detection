@@ -12,6 +12,48 @@ from . import cli
 from . import io
 
 
+def train_yolo(args):
+    """Train a YOLO object detection model.
+    """
+    import ultralytics as ult
+
+    # Read the config file.
+    with open(args.config, "rb") as f:
+        config = tomllib.load(f)
+    # Use global config `name` if `name` isn't set in the train section.
+    model_name = config["train"].get("name", config["name"])
+    config = config["train"]
+
+    # FIXME:
+    yaml_path = ""
+
+    # TODO: handle case where this is the first time the model is being
+    # fine-tuned.
+    model = ult.YOLO(config["pretrain_path"])
+
+    model.train(
+        data = str(yaml_path)
+        # From config --------
+        , name = model_name
+        , epochs = config["epochs"]
+        # Epochs to wait for no observable improvement for early stopping
+        , patience = config["patience"]
+        # --------------------
+        # initial and final learning rate
+        #, lr0, lrf
+        #, optimizer
+        # random seed
+        #, seed
+        # Top-level directory where results will be saved
+        , project = "models"
+        , pretrained = True
+        , device = 0
+        , workers = 1
+        , exist_ok = False)
+
+    # Do something with the model.
+
+
 def assemble_training_set(args):
     """Assemble a (YOLO) training set from multiple annotated data sources.
     """

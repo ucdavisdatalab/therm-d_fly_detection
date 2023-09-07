@@ -13,6 +13,6 @@ datasets = [
 #out_dir = "outputs/training"
 
 [train]
-pretrain_path = ""
+pretrain_path = "models/yolov8x.pt"
 epochs = 10
 patience = 20

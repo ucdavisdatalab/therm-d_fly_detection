@@ -25,7 +25,7 @@ def train_yolo(args):
     config = config["train"]
 
     # FIXME:
-    yaml_path = ""
+    yaml_path = config["data_path"]
 
     # TODO: handle case where this is the first time the model is being
     # fine-tuned.
@@ -134,3 +134,9 @@ def assemble_training_set(args):
     crosswalk = pd.DataFrame(crosswalk)
     crosswalk.to_csv(out_path, index = False)
     print(f"Wrote crosswalk '{out_path}'.")
+
+if __name__ == "__main__":
+    import collections as col
+    Args = col.namedtuple("Args", ["config"])
+    args = Args(config = "configs/test.toml")
+    train_yolo(args)

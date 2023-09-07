@@ -14,5 +14,6 @@ datasets = [
 
 [train]
 pretrain_path = "models/yolov8x.pt"
+data_path = "outputs/yolo_test/yolo_test.yaml"
 epochs = 10
 patience = 20

@@ -1,6 +1,7 @@
 """Functions to train a YOLO model for fly detection.
 """
 
+from argparse import ArgumentParser
 from pathlib import Path
 import sys
 import tomllib
@@ -18,6 +19,7 @@ def train_yolo(args):
     import ultralytics as ult
 
     # Read the config file.
+    print(f"Config path: '{args.config}'")
     with open(args.config, "rb") as f:
         config = tomllib.load(f)
     # Use global config `name` if `name` isn't set in the train section.
@@ -58,6 +60,7 @@ def assemble_training_set(args):
     """Assemble a (YOLO) training set from multiple annotated data sources.
     """
     # Read the config file.
+    print(f"Config path: '{args.config}'")
     with open(args.config, "rb") as f:
         config = tomllib.load(f)
     # Use global config `name` if `name` isn't set in the assemble section.
@@ -135,8 +138,9 @@ def assemble_training_set(args):
     crosswalk.to_csv(out_path, index = False)
     print(f"Wrote crosswalk '{out_path}'.")
 
+
 if __name__ == "__main__":
-    import collections as col
-    Args = col.namedtuple("Args", ["config"])
-    args = Args(config = "configs/test.toml")
+    parser = ArgumentParser()
+    parser.add_argument("config", type = Path, help = "path to config file")
+    args = parser.parse_args()
     train_yolo(args)

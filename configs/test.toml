@@ -1,11 +1,18 @@
+name = "yolo_test"
 
-[training]
+[assemble]
+data_dir = "data/"
 datasets = [
-    "data/2023-07-12_biden"
-  , "data/2023-07-19_biden"
-  , "data/2023-07-19_shiny"
-  , "data/2023-07-22_shiny"
-  , "data/2023-07-26_shiny"
-#  , "data/2023-08-09_biden"
+    "2023-07-12_biden"
+  , "2023-07-19_biden"
+  , "2023-07-19_shiny"
+  , "2023-07-22_shiny"
+  , "2023-07-26_shiny"
+  , "2023-08-09_biden"
 ]
-assembly_dir = "outputs/training"
+#out_dir = "outputs/training"
+
+[train]
+pretrain_path = ""
+epochs = 10
+patience = 20

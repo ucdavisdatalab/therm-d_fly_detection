@@ -14,8 +14,10 @@ def get_matrix(path):
 
 def extropolate(X, mat):
     ''' Piecewise extroploation function where X is a distance input and the outputs gives a guess for the temperature'''
-    if np.min(mat[0]) > X or np.max(mat[0]) < X:
-        return(None)
+    if np.min(mat[0]) > X:
+         return((mat[1, 0] - mat[1, 1]) / (mat[0, 0] - mat[0, 1]) * (X - mat[0, 0]) + mat[1,0])
+    if np.max(mat[0]) < X:
+        return((mat[1, -1] - mat[1, -2]) / (mat[0, -1] - mat[0, -2]) * (X - mat[0, -2]) + mat[1, -2])
     for i in range(mat.shape[1]):
         if X == mat[0,i]:
             return(mat[1,i])

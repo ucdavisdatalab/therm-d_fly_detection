@@ -4,6 +4,7 @@
 import cv2
 import numpy as np
 import pandas as pd
+import toml
 
 from .ops import rescale
 
@@ -273,3 +274,12 @@ def read_fly_template(path):
     shape = npz.get("shape")
     templates = [v for k, v in npz.items() if k != "shape"]
     return templates, shape
+
+def read_config(toml_name):
+    with open(toml_name, 'r') as toml_file:
+        data = toml.load(toml_file)
+        return(data)
+        
+
+def get_distance(dict, name):
+    return(dict['distance'][name])

@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import cli
+from . import detect
 from . import io
 from . import match
 from . import ops
@@ -267,6 +268,12 @@ def main():
         "from multiple annotated data sets")
     assemble_parser.set_defaults(func = train.assemble_training_set)
     assemble_parser.add_argument(
+        "config", type = Path, help ="path to config file")
+
+    detect_parser = subparsers.add_parser(
+        "detect", help = "apply a fly detection model to  a dataset")
+    detect_parser.set_defaults(func = detect.main)
+    detect_parser.add_argument(
         "config", type = Path, help ="path to config file")
 
     args = parser.parse_args()

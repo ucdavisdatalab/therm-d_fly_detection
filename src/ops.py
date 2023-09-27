@@ -113,19 +113,23 @@ def unsharp_mask(image, sigma, size = (0, 0)):
     return cv2.addWeighted(image, 2.0, blurred, -1.0, 0.0)
 
 
-def rescale(image, max_size):
+def rescale(image, max_size, expand = False):
     """Rescale an image to a maximum size, preserving the aspect ratio.
     """
+    match max_size:
+        case int() | float():
+            max_size = [max_size, max_size]
+    max_size = np.array(max_size)
+
     # Determine which dimension to resize.
-    h, w = image.shape[:2]
-    m = max(w, h)
-    if m <= max_size:
+    shape = np.array(image.shape[:2])
+    scaling = np.min(max_size / shape)
+    if (not expand) and scaling > 1:
         return image
 
-    scaling = max_size / max(w, h)
-    w = int(round(w * scaling))
-    h = int(round(h * scaling))
-    return cv2.resize(image, (w, h))
+    shape = np.round(shape * scaling).astype(int)
+    # NOTE: The resize function takes (w, h) instead of (h, w).
+    return cv2.resize(image, shape[::-1])
 
 
 def get_perspective_transform(contour):

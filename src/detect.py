@@ -64,6 +64,8 @@ def main(args):
         result = pd.DataFrame(
             result, columns = ["xc", "yc", "w", "h", "confidence"])
         result["path"] = str(path)
+        result["arena_width"] = w
+        result["arena_height"] = h
 
         # Correct for image rescaling.
         result[["xc", "w"]] *= w / new_w

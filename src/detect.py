@@ -30,7 +30,11 @@ def main(args):
     print(f"Model path: '{model_path}'")
 
     # Set up the output path.
-    out_path = config.get("output_path", data_path / "boxes.parquet")
+    as_parquet = config.get("as_parquet", False)
+    out_path = config.get("output_path")
+    if out_path is None:
+        out_path = (data_path / "boxes").with_suffix(
+            ".parquet" if as_parquet else ".csv")
     out_path = Path(out_path)
     if out_path.exists():
         msg = f"'{out_path}' exists. Continue and overwrite (y/n)? "
@@ -105,12 +109,11 @@ def main(args):
         lambda x: extract_extropolate.extropolate(x, temperature_table))
     results['temperatures'] = temp_col
 
-    if eval(config['parquet']):
+    if as_parquet:
         results.to_parquet(out_path, index = False)
-        print(f"Wrote '{out_path}'")
     else:
-        results.to_csv(Path(config['csv_path']))
-        print(f"Wrote '{Path(config['csv_path'])}'")
+        results.to_csv(out_path)
+    print(f"Wrote '{out_path}'")
 
 
 def preprocess_image(image, shape = (384, 640)):

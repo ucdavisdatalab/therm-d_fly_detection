@@ -11,10 +11,8 @@ Elon = {horizontal = 28, vertical = 16}
 model_path = "models/2023-08-25_fly-detection.onnx"
 data_path = "outputs/2023-08-09_biden"
 minimum_confidence = 0.01
-parquet = "False"
-csv_path = "outputs/2023-08-09_biden/csv"
-
 #output_path = ""
+#as_parquet = true
 
 
 # Model Training Configuration

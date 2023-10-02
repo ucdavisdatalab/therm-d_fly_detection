@@ -83,28 +83,27 @@ def main(args):
 
     results = pd.concat(results)
 
-    
     # Converting px to cm for coordinates
     temperature_table = data.read_sheet_temperatures()
-    lis_x = results.loc[:,'xc']
-    lis_y = results.loc[:,'yc']
-    arena_name = data_path.name.rsplit('_',1)[1]
+    lis_x = results.loc[:, 'xc']
+    lis_y = results.loc[:, 'yc']
+    arena_name = data_path.name.rsplit('_', 1)[1]
     table = io.read_config('configs/test.toml')
     arena_cm_horizontal = io.get_distance(table, arena_name)['horizontal']
     arena_cm_vertical = io.get_distance(table, arena_name)['vertical']
 
-    x_px = results.loc[:,'arena_width']
+    x_px = results.loc[:, 'arena_width']
     x_cm = lis_x * arena_cm_horizontal / x_px
     y_px = results.loc[:, 'arena_height']
     y_cm = lis_y * arena_cm_vertical / y_px
-    
+
     results['x_cm'] = x_cm
     results['y_cm'] = y_cm
 
     # Temperature
-    temp_col = x_cm.map(lambda x: extract_extropolate.extropolate(x, temperature_table))
+    temp_col = x_cm.map(
+        lambda x: extract_extropolate.extropolate(x, temperature_table))
     results['temperatures'] = temp_col
-
 
     if eval(config['parquet']):
         results.to_parquet(out_path, index = False)

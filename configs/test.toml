@@ -1,6 +1,6 @@
 name = "yolo_test"
 
-[distance]
+[apparatuses]
 biden = {horizontal = 28.6, vertical = 15.9}
 shiny = {horizontal = 28.6, vertical = 16.1}
 Skywalker = {horizontal = 24, vertical = 16}

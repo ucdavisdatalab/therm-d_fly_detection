@@ -3,7 +3,6 @@
 
 from pathlib import Path
 import sys
-import tomllib
 
 import cv2
 import numpy as np
@@ -20,8 +19,8 @@ def main(args):
 
     # Read the config file.
     print(f"Config path: '{args.config}'")
-    with open(args.config, "rb") as f:
-        config = tomllib.load(f)
+    config = io.read_config(args.config)
+    apparatuses = config["apparatuses"]
     config = config["detect"]
 
     data_path = Path(config["data_path"])
@@ -92,9 +91,9 @@ def main(args):
     lis_x = results.loc[:, 'xc']
     lis_y = results.loc[:, 'yc']
     arena_name = data_path.name.rsplit('_', 1)[1]
-    table = io.read_config('configs/test.toml')
-    arena_cm_horizontal = io.get_distance(table, arena_name)['horizontal']
-    arena_cm_vertical = io.get_distance(table, arena_name)['vertical']
+
+    arena_cm_horizontal = apparatuses[arena_name]["horizontal"]
+    arena_cm_vertical = apparatuses[arena_name]["vertical"]
 
     x_px = results.loc[:, 'arena_width']
     x_cm = lis_x * arena_cm_horizontal / x_px

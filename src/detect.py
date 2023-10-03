@@ -89,9 +89,9 @@ def main(args):
     results = pd.concat(results)
 
     # Compute coordinates in centimeters, converting from pixels.
-    arena_name = data_path.name.rsplit('_', 1)[1]
-    arena_w_cm = apparatuses[arena_name]["horizontal"]
-    arena_h_cm = apparatuses[arena_name]["vertical"]
+    apparatus = data.apparatus
+    arena_w_cm = apparatuses[apparatus]["horizontal"]
+    arena_h_cm = apparatuses[apparatus]["vertical"]
 
     arena_w_px = results["arena_width_px"]
     arena_h_px = results["arena_height_px"]

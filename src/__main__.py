@@ -185,18 +185,16 @@ def match_flies(args):
     templates, template_shape = io.read_fly_template(template_path)
     print(f"  Found {len(templates)} template images.\n")
 
-
-    arena_name = data_dir.name.rsplit('_',1)[1]
+    arena_name = dset.apparatus
     table = io.read_config('configs/test.toml')
     arena_cm = io.get_distance(table, arena_name)['horizontal']
     arena_px = cv2.imread(str(dset[0])).shape[1]
     arena_scale = arena_px / arena_cm
-    template_scale = 4280/28.6
+    template_scale = 4280 / 28.6
     scale = arena_scale / template_scale
     width = int(round(templates[0].shape[1] * scale))
     height = int(round(templates[0].shape[0] * scale))
     dim = (width, height)
-
 
     c = 0
     for i in templates:

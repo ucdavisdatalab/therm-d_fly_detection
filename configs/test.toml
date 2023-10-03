@@ -3,8 +3,8 @@ name = "yolo_test"
 [apparatuses]
 biden = {horizontal = 28.6, vertical = 15.9}
 shiny = {horizontal = 28.6, vertical = 16.1}
-Skywalker = {horizontal = 24, vertical = 16}
-Elon = {horizontal = 28, vertical = 16}
+skywalker = {horizontal = 24, vertical = 16}
+elon = {horizontal = 28, vertical = 16}
 
 
 [detect]

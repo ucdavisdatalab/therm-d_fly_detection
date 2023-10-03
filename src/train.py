@@ -75,7 +75,7 @@ def assemble_training_set(args):
     metadata = []
     for name in sorted(config["datasets"]):
         dataset = io.FlyDatasetReader(data_dir / name)
-        apparatus = name.rsplit("_", 1)[-1]
+        apparatus = dataset.apparatus
 
         # FIXME: image and labels could be out of correspondence if there are
         # no labels for some images.

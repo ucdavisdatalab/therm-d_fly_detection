@@ -82,6 +82,14 @@ class FlyDatasetReader:
 
         self.max_size = max_size
 
+        # Determine the apparatus.
+        name_parts = data_dir.name.rsplit("_", 1)
+        if len(name_parts) != 2:
+            warnings.warn(
+                f"Data directory name '{data_dir.name}' does not have format"
+                " YYYY-MM-DD_APPARATUS.")
+        self.apparatus = name_parts[-1].lower()
+
         # Locate photos.
         suffixes = [s.lower() for s in suffixes]
         blank_paths = []

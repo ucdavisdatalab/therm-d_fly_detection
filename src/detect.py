@@ -44,8 +44,9 @@ def main(args):
     # Load the model.
     model = ort.InferenceSession(model_path)
 
-    # Load the images.
+    # Load the images and temperatures.
     data = io.FlyDatasetReader(data_path)
+    temperature_table = data.read_sheet_temperatures()
 
     # TODO: Can we just run with an entire list of images?
     # Apply the model to each image.
@@ -66,14 +67,15 @@ def main(args):
 
         # Convert results to a data frame.
         result = pd.DataFrame(
-            result, columns = ["xc", "yc", "w", "h", "confidence"])
+            result, columns = [
+                "x_px", "y_px", "width_px", "height_px", "confidence"])
         result["path"] = str(path)
-        result["arena_width"] = w
-        result["arena_height"] = h
+        result["arena_width_px"] = w
+        result["arena_height_px"] = h
 
         # Correct for image rescaling.
-        result[["xc", "w"]] *= w / new_w
-        result[["yc", "h"]] *= h / new_h
+        result[["x_px", "width_px"]] *= w / new_w
+        result[["y_px", "height_px"]] *= h / new_h
 
         min_conf = config["minimum_confidence"]
         result = result.loc[min_conf <= result["confidence"], :]
@@ -86,32 +88,30 @@ def main(args):
 
     results = pd.concat(results)
 
-    # Converting px to cm for coordinates
-    temperature_table = data.read_sheet_temperatures()
-    lis_x = results.loc[:, 'xc']
-    lis_y = results.loc[:, 'yc']
+    # Compute coordinates in centimeters, converting from pixels.
     arena_name = data_path.name.rsplit('_', 1)[1]
+    arena_w_cm = apparatuses[arena_name]["horizontal"]
+    arena_h_cm = apparatuses[arena_name]["vertical"]
 
-    arena_cm_horizontal = apparatuses[arena_name]["horizontal"]
-    arena_cm_vertical = apparatuses[arena_name]["vertical"]
+    arena_w_px = results["arena_width_px"]
+    arena_h_px = results["arena_height_px"]
 
-    x_px = results.loc[:, 'arena_width']
-    x_cm = lis_x * arena_cm_horizontal / x_px
-    y_px = results.loc[:, 'arena_height']
-    y_cm = lis_y * arena_cm_vertical / y_px
+    x_px = results["x_px"]
+    y_px = results["y_px"]
 
-    results['x_cm'] = x_cm
-    results['y_cm'] = y_cm
+    x_cm = x_px * arena_w_cm / arena_w_px
+    y_cm = y_px * arena_h_cm / arena_h_px
+    results["x_cm"] = x_cm
+    results["y_cm"] = y_cm
 
-    # Temperature
-    temp_col = x_cm.map(
+    # Compute temperature estimates.
+    results["temperature"] = x_cm.map(
         lambda x: extract_extropolate.extropolate(x, temperature_table))
-    results['temperatures'] = temp_col
 
     if as_parquet:
         results.to_parquet(out_path, index = False)
     else:
-        results.to_csv(out_path)
+        results.to_csv(out_path, index = False)
     print(f"Wrote '{out_path}'")
 
 

@@ -31,8 +31,13 @@ def register_arenas(args):
     # TODO:
     #   + Expose mask_hsv parameters
 
+    # Read the config file.
+    print(f"Config path: '{args.config}'")
+    config = io.read_config(args.config)
+    config = config["register"]
+
     # Read the data set.
-    data_dir = args.data
+    data_dir = Path(config["data_path"])
     print(f"Data set directory: '{data_dir}'")
     if not data_dir.is_dir():
         raise IOError(f"'{data_dir}' is not a directory.")
@@ -41,7 +46,7 @@ def register_arenas(args):
     print(f"  Found {len(dset)} images.\n")
 
     # Make sure the output directory exists.
-    out_dir = args.out
+    out_dir = config.get("output_path")
     if out_dir is None:
         out_dir = Path("outputs") / data_dir.name / "photos"
     print(f"Output directory: '{out_dir}'")
@@ -54,7 +59,8 @@ def register_arenas(args):
             sys.exit(1)
     print()
 
-    if args.debug:
+    is_debug = config.get("debug", False)
+    if is_debug:
         debug_dir = out_dir / "debug"
         debug_dir.mkdir(exist_ok = True)
         print(f"Debug directory: '{debug_dir}'\n")
@@ -90,7 +96,7 @@ def register_arenas(args):
         if len(orange_square) != 1:
             raise RuntimeError("Could not find orange registration mark.")
 
-        if args.debug:
+        if is_debug:
             # Save a diagnostic image.
             preview = cv2.drawContours(
                 adj_img.copy(), green_squares, -1, (0, 255, 0), 3)
@@ -150,8 +156,14 @@ def match_flies(args):
     #   + Scale templates according to size of image
     #   + Expose match.extract parameters
 
+    # Read the config file.
+    print(f"Config path: '{args.config}'")
+    config = io.read_config(args.config)
+    apparatuses = config["apparatuses"]
+    config = config["register"]
+
     # Read the data set.
-    data_dir = args.data
+    data_dir = Path(config["data_path"])
     print(f"Data set directory: '{data_dir}'")
     if not data_dir.is_dir():
         raise IOError(f"'{data_dir}' is not a directory.")
@@ -160,7 +172,7 @@ def match_flies(args):
     print(f"  Found {len(dset)} images.\n")
 
     # Make sure the output directory exists.
-    out_dir = args.out
+    out_dir = config.get("output_path")
     if out_dir is None:
         out_dir = Path("outputs") / data_dir.name / "labels"
     print(f"Output directory: '{out_dir}'")
@@ -173,7 +185,8 @@ def match_flies(args):
             sys.exit(1)
     print()
 
-    if args.debug:
+    is_debug = config.get("debug", False)
+    if is_debug:
         debug_dir = out_dir / "debug"
         debug_dir.mkdir(exist_ok = True)
         print(f"Debug directory: '{debug_dir}'\n")
@@ -185,11 +198,11 @@ def match_flies(args):
     templates, template_shape = io.read_fly_template(template_path)
     print(f"  Found {len(templates)} template images.\n")
 
-    arena_name = dset.apparatus
-    table = io.read_config('configs/test.toml')
-    arena_cm = io.get_distance(table, arena_name)['horizontal']
-    arena_px = cv2.imread(str(dset[0])).shape[1]
-    arena_scale = arena_px / arena_cm
+    # Resize templates based on relative arena size.
+    arena_w_cm = apparatuses[dset.apparatus]["horizontal"]
+    # FIXME:
+    arena_w_px = cv2.imread(str(dset[0])).shape[1]
+    arena_scale = arena_w_px / arena_w_cm
     template_scale = 4280 / 28.6
     scale = arena_scale / template_scale
     width = int(round(templates[0].shape[1] * scale))
@@ -201,9 +214,6 @@ def match_flies(args):
         templates[c] = cv2.resize(i, dim, interpolation = cv2.INTER_AREA)
         c += 1
 
-    # TODO: Resize templates based on relative arena size. This requires info
-    # about the physical size of the arena.
-
     # Process each image.
     print("Processing images...\n")
 
@@ -211,11 +221,11 @@ def match_flies(args):
         print(f"Processing '{path}'.")
         # Run template matching.
         boxes, scores = match.concatenate(
-            [match.extract(img, t, verbose = args.debug) for t in templates])
+            [match.extract(img, t, verbose = is_debug) for t in templates])
         boxes = match.suppress_nonmax(boxes, scores)
         print(f"  Found {boxes.shape[0]} boxes.")
 
-        if args.debug:
+        if is_debug:
             # Output a diagnostic image.
             ax = viz.plot_image(img, figsize = (15, 15))
 
@@ -230,9 +240,9 @@ def match_flies(args):
         io.write_yolo(out_path, boxes, None, img.shape)
         print(f"  Wrote '{out_path}'.\n")
 
-    fly_label = f'{out_dir}/labels.txt'
-    with open(fly_label, mode = 'wt') as file:
-        file.write('fly')
+    fly_label = f"{out_dir}/labels.txt"
+    with open(fly_label, mode = "wt") as file:
+        file.write("fly")
 
 
 def main():
@@ -248,31 +258,23 @@ def main():
         "register", help = "(step 1) register arenas in data set")
     register_parser.set_defaults(func = register_arenas)
 
+    detect_parser = subparsers.add_parser(
+        "detect", help = "apply a fly detection model to  a dataset")
+    detect_parser.set_defaults(func = detect.main)
+
     match_parser = subparsers.add_parser(
         "match", help = "apply template matching to data set")
     match_parser.set_defaults(func = match_flies)
-
-    # Add `data` and `out` arguments to all subparsers defined before this
-    # point.
-    for name, subparser in subparsers.choices.items():
-        subparser.add_argument(
-            "data", type = Path, help = "path to the data set directory")
-        subparser.add_argument(
-            "out", type = Path, help = "path to directory to save output"
-            , nargs = "?")
 
     assemble_parser = subparsers.add_parser(
         "assemble", help = "assemble a YOLO object detection training set "
         "from multiple annotated data sets")
     assemble_parser.set_defaults(func = train.assemble_training_set)
-    assemble_parser.add_argument(
-        "config", type = Path, help ="path to config file")
 
-    detect_parser = subparsers.add_parser(
-        "detect", help = "apply a fly detection model to  a dataset")
-    detect_parser.set_defaults(func = detect.main)
-    detect_parser.add_argument(
-        "config", type = Path, help ="path to config file")
+    # Add `config` argument to all subparsers.
+    for name, subparser in subparsers.choices.items():
+        subparser.add_argument(
+            "config", type = Path, help ="path to config file")
 
     args = parser.parse_args()
 

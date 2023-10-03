@@ -1,23 +1,8 @@
-name = "yolo_test"
-
-[apparatuses]
-biden = {horizontal = 28.6, vertical = 15.9}
-shiny = {horizontal = 28.6, vertical = 16.1}
-skywalker = {horizontal = 24, vertical = 16}
-elon = {horizontal = 28, vertical = 16}
-
-
-[detect]
-model_path = "models/2023-08-25_fly-detection.onnx"
-data_path = "outputs/2023-08-09_biden"
-minimum_confidence = 0.01
-#output_path = ""
-#as_parquet = true
-
-
 # Model Training Configuration
 # ----------------------------
 # Ignore these unless you're trying to train a fly detection model.
+name = "yolo_test"
+
 [assemble]
 data_dir = "data/"
 datasets = [

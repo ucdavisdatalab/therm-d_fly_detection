@@ -4,7 +4,7 @@
 import cv2
 import numpy as np
 import pandas as pd
-import toml
+import tomllib
 
 from .ops import rescale
 
@@ -280,7 +280,7 @@ def read_config(path):
     """Read a TOML configuration file.
     """
     with open(path, "rb") as f:
-        return toml.load(f)
+        return tomllib.load(f)
 
 
 def get_distance(dict, name):

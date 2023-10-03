@@ -275,11 +275,13 @@ def read_fly_template(path):
     templates = [v for k, v in npz.items() if k != "shape"]
     return templates, shape
 
-def read_config(toml_name):
-    with open(toml_name, 'r') as toml_file:
-        data = toml.load(toml_file)
-        return(data)
-        
+
+def read_config(path):
+    """Read a TOML configuration file.
+    """
+    with open(path, "rb") as f:
+        return toml.load(f)
+
 
 def get_distance(dict, name):
-    return(dict['distance'][name])
+    return dict['distance'][name]

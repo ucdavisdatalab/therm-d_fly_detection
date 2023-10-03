@@ -57,13 +57,9 @@ def train_yolo(args):
     # Do something with the model.
 
 
-def assemble_training_set(args):
+def assemble_training_set(config):
     """Assemble a (YOLO) training set from multiple annotated data sources.
     """
-    # Read the config file.
-    print(f"Config path: '{args.config}'")
-    with open(args.config, "rb") as f:
-        config = tomllib.load(f)
     # Use global config `name` if `name` isn't set in the assemble section.
     training_set_name = config["assemble"].get("name", config["name"])
     config = config["assemble"]

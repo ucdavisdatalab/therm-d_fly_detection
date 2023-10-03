@@ -25,15 +25,11 @@ from . import train
 from . import viz
 
 
-def register_arenas(args):
+def register_arenas(config):
     """Register the fly arenas.
     """
     # TODO:
     #   + Expose mask_hsv parameters
-
-    # Read the config file.
-    print(f"Config path: '{args.config}'")
-    config = io.read_config(args.config)
     config = config["register"]
 
     # Read the data set.
@@ -149,16 +145,13 @@ def register_arenas(args):
         print(f"Wrote '{out_path}'.")
 
 
-def match_flies(args):
+def match_flies(config):
     """Apply template matching to fly images.
     """
     # TODO:
     #   + Scale templates according to size of image
     #   + Expose match.extract parameters
 
-    # Read the config file.
-    print(f"Config path: '{args.config}'")
-    config = io.read_config(args.config)
     apparatuses = config["apparatuses"]
     config = config["register"]
 
@@ -278,9 +271,11 @@ def main():
 
     args = parser.parse_args()
 
-    # TODO: Read config file if there is one.
+    # Read the config file.
+    print(f"Config path: '{args.config}'")
+    config = io.read_config(args.config)
 
-    args.func(args)
+    args.func(config)
 
 
 if __name__ == "__main__":

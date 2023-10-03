@@ -14,12 +14,9 @@ from . import ops
 from . import extract_extropolate
 
 
-def main(args):
+def main(config):
     import onnxruntime as ort
 
-    # Read the config file.
-    print(f"Config path: '{args.config}'")
-    config = io.read_config(args.config)
     apparatuses = config["apparatuses"]
     config = config["detect"]
 

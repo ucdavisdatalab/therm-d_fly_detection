@@ -9,7 +9,6 @@ Currently, this module only runs step 1 of these steps:
 
 from argparse import ArgumentParser
 from pathlib import Path
-import sys
 
 import cv2
 import matplotlib.pyplot as plt
@@ -42,24 +41,14 @@ def register_arenas(config):
     print(f"  Found {len(dset)} images.\n")
 
     # Make sure the output directory exists.
-    out_dir = config.get("output_path")
-    if out_dir is None:
-        out_dir = Path("outputs") / data_dir.name / "photos"
-    print(f"Output directory: '{out_dir}'")
-
-    out_dir.mkdir(parents = True, exist_ok = True)
-    if next(out_dir.iterdir(), None):
-        msg = ("Output directory contains files. "
-               "Continue and possibly overwrite (y/n)? ")
-        if not cli.prompt_yes(msg):
-            sys.exit(1)
-    print()
+    output_dir = config.get(
+        "output_path", Path("outputs") / data_dir.name / "photos")
+    cli.check_dir_exists_empty(output_dir, "Output directory")
 
     is_debug = config.get("debug", False)
     if is_debug:
-        debug_dir = out_dir / "debug"
-        debug_dir.mkdir(exist_ok = True)
-        print(f"Debug directory: '{debug_dir}'\n")
+        debug_dir = output_dir / "debug"
+        cli.check_dir_exists_empty(debug_dir, "Debug directory")
 
     # Find the registration marks.
     print("Finding registration marks...\n")
@@ -139,10 +128,10 @@ def register_arenas(config):
 
         # Save the new image (or save metadata about the orientation and
         # perspective).
-        out_path = out_dir / path.name
+        output_path = output_dir / path.name
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        cv2.imwrite(str(out_path), img)
-        print(f"Wrote '{out_path}'.")
+        cv2.imwrite(str(output_path), img)
+        print(f"Wrote '{output_path}'.")
 
 
 def match_flies(config):
@@ -165,24 +154,14 @@ def match_flies(config):
     print(f"  Found {len(dset)} images.\n")
 
     # Make sure the output directory exists.
-    out_dir = config.get("output_path")
-    if out_dir is None:
-        out_dir = Path("outputs") / data_dir.name / "labels"
-    print(f"Output directory: '{out_dir}'")
-
-    out_dir.mkdir(parents = True, exist_ok = True)
-    if next(out_dir.iterdir(), None):
-        msg = ("Output directory contains files. "
-               "Continue and possibly overwrite (y/n)? ")
-        if not cli.prompt_yes(msg):
-            sys.exit(1)
-    print()
+    output_dir = config.get(
+        "output_path", Path("outputs") / data_dir.name / "labels")
+    cli.check_output_dir_exists_empty(output_dir, "Output directory")
 
     is_debug = config.get("debug", False)
     if is_debug:
-        debug_dir = out_dir / "debug"
-        debug_dir.mkdir(exist_ok = True)
-        print(f"Debug directory: '{debug_dir}'\n")
+        debug_dir = output_dir / "debug"
+        cli.check_dir_exists_empty(debug_dir, "Debug directory")
 
     # Load the templates.
     template_path = Path("outputs/fly_template.npz")
@@ -229,11 +208,11 @@ def match_flies(config):
             print(f"  Wrote '{debug_path}'.")
 
         # Save to a YOLO file.
-        out_path = out_dir / (str(path.stem) + ".txt")
-        io.write_yolo(out_path, boxes, None, img.shape)
-        print(f"  Wrote '{out_path}'.\n")
+        output_path = output_dir / (str(path.stem) + ".txt")
+        io.write_yolo(output_path, boxes, None, img.shape)
+        print(f"  Wrote '{output_path}'.\n")
 
-    fly_label = f"{out_dir}/labels.txt"
+    fly_label = f"{output_dir}/labels.txt"
     with open(fly_label, mode = "wt") as file:
         file.write("fly")
 

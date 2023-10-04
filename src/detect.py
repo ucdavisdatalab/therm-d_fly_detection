@@ -27,16 +27,12 @@ def main(config):
 
     # Set up the output path.
     as_parquet = config.get("as_parquet", False)
-    out_path = config.get("output_path")
-    if out_path is None:
-        out_path = (data_path / "boxes").with_suffix(
+    output_path = config.get("output_path")
+    if output_path is None:
+        output_path = (data_path / "boxes").with_suffix(
             ".parquet" if as_parquet else ".csv")
-    out_path = Path(out_path)
-    if out_path.exists():
-        msg = f"'{out_path}' exists. Continue and overwrite (y/n)? "
-        if not cli.prompt_yes(msg):
-            sys.exit(1)
-    print(f"Output path: '{out_path}'\n")
+    output_path = Path(output_path)
+    cli.prompt_overwrite(output_path, "Output path")
 
     # Load the model.
     model = ort.InferenceSession(model_path)
@@ -106,10 +102,10 @@ def main(config):
         lambda x: extract_extropolate.extropolate(x, temperature_table))
 
     if as_parquet:
-        results.to_parquet(out_path, index = False)
+        results.to_parquet(output_path, index = False)
     else:
-        results.to_csv(out_path, index = False)
-    print(f"Wrote '{out_path}'")
+        results.to_csv(output_path, index = False)
+    print(f"Wrote '{output_path}'")
 
 
 def preprocess_image(image, shape = (384, 640)):

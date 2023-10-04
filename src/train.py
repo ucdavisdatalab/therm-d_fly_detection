@@ -102,12 +102,7 @@ def assemble_training_set(config):
     # Make directories for the training data set.
     out_dir = config.get("out_dir", Path("outputs") / training_set_name)
     out_dir = Path(out_dir)
-    print(f"Output directory: '{out_dir}'")
-    if out_dir.is_dir() and next(out_dir.iterdir(), None):
-        msg = ("Output directory contains files. "
-               "Continue and possibly overwrite (y/n)? ")
-        if not cli.prompt_yes(msg):
-            sys.exit(1)
+    cli.prompt_overwrite(out_dir, "Output directory")
 
     out_images_dir = out_dir / "images"
     (out_images_dir / "train").mkdir(exist_ok = True, parents = True)

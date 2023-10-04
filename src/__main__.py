@@ -43,12 +43,12 @@ def register_arenas(config):
     # Make sure the output directory exists.
     output_dir = config.get(
         "output_path", Path("outputs") / data_dir.name / "photos")
-    cli.check_dir_exists_empty(output_dir, "Output directory")
+    cli.prompt_overwrite(output_dir, "Output directory", mkdir = True)
 
     is_debug = config.get("debug", False)
     if is_debug:
         debug_dir = output_dir / "debug"
-        cli.check_dir_exists_empty(debug_dir, "Debug directory")
+        cli.prompt_overwrite(debug_dir, "Debug directory", mkdir = True)
 
     # Find the registration marks.
     print("Finding registration marks...\n")
@@ -156,12 +156,12 @@ def match_flies(config):
     # Make sure the output directory exists.
     output_dir = config.get(
         "output_path", Path("outputs") / data_dir.name / "labels")
-    cli.check_output_dir_exists_empty(output_dir, "Output directory")
+    cli.prompt_overwrite(output_dir, "Output directory", mkdir = True)
 
     is_debug = config.get("debug", False)
     if is_debug:
         debug_dir = output_dir / "debug"
-        cli.check_dir_exists_empty(debug_dir, "Debug directory")
+        cli.prompt_overwrite(debug_dir, "Debug directory", mkdir = True)
 
     # Load the templates.
     template_path = Path("outputs/fly_template.npz")

@@ -107,6 +107,24 @@ class FlyDatasetReader:
         self.blank_paths = sorted(blank_paths)
         self.paths = sorted(paths)
 
+        # Locate arenas.
+        arenas_dir = data_dir / "arenas"
+        arena_paths = []
+        if not arenas_dir.is_dir():
+            warnings.warn(f"Directory '{arenas_dir}' does not exist.")
+        else:
+            image_stems = [p.stem for p in paths]
+            for p in arenas_dir.iterdir():
+                if p.suffix.lower() not in suffixes:
+                    continue
+                # Check that the arena corresponds to a photo.
+                if p.stem not in image_stems:
+                    warnings.warn(f"No photo for arena file '{p}'.")
+                    continue
+                arena_paths.append(p)
+
+        self.arena_paths = sorted(arena_paths)
+
         # Locate labels.
         labels_dir = data_dir / "labels"
         label_paths = []
@@ -176,6 +194,30 @@ class FlyDatasetReader:
             kwargs["max_size"] = self.max_size
         path = self.paths[index]
         return path, read_image(path, **kwargs)
+
+    def iter_read_arenas(self, **kwargs):
+        """Iterate over the data set, reading arena images and yielding
+        (path, image) pairs.
+
+        Yields
+        ------
+        path: pathlib.Path
+            The path to the image.
+
+        image: numpy.ndarray
+            The image in RGB format.
+        """
+        arena_paths = self.arena_paths
+        n_arenas = len(arena_paths)
+        if n_arenas == 0:
+            raise RuntimeError("No arenas in this data set.")
+
+        if "max_size" not in kwargs:
+            kwargs["max_size"] = self.max_size
+
+        for i in range(n_arenas):
+            path = arena_paths[i]
+            yield path, read_image(path, **kwargs)
 
     def read_blank(self, index = 0, **kwargs):
         """Read a single "blank" no-flies image from the data set.

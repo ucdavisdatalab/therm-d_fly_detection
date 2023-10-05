@@ -42,13 +42,14 @@ def register_arenas(config):
 
     # Make sure the output directory exists.
     output_dir = config.get(
-        "output_path", Path("outputs") / data_dir.name / "photos")
+        "output_path", data_dir / "arenas")
     cli.prompt_overwrite(output_dir, "Output directory", mkdir = True)
 
     is_debug = config.get("debug", False)
     if is_debug:
-        debug_dir = output_dir / "debug"
+        debug_dir = data_dir / "debug/arenas"
         cli.prompt_overwrite(debug_dir, "Debug directory", mkdir = True)
+    print()
 
     # Find the registration marks.
     print("Finding registration marks...\n")
@@ -155,13 +156,14 @@ def match_flies(config):
 
     # Make sure the output directory exists.
     output_dir = config.get(
-        "output_path", Path("outputs") / data_dir.name / "labels")
+        "output_path", data_dir / "match_labels")
     cli.prompt_overwrite(output_dir, "Output directory", mkdir = True)
 
     is_debug = config.get("debug", False)
     if is_debug:
-        debug_dir = output_dir / "debug"
+        debug_dir = data_dir / "debug/match_labels"
         cli.prompt_overwrite(debug_dir, "Debug directory", mkdir = True)
+    print()
 
     # Load the templates.
     template_path = Path("outputs/fly_template.npz")
@@ -189,7 +191,7 @@ def match_flies(config):
     # Process each image.
     print("Processing images...\n")
 
-    for path, img in dset.iter_read():
+    for path, img in dset.iter_read_arenas():
         print(f"Processing '{path}'.")
         # Run template matching.
         boxes, scores = match.concatenate(

@@ -29,7 +29,7 @@ def main(config):
     as_parquet = config.get("as_parquet", False)
     output_path = config.get("output_path")
     if output_path is None:
-        output_path = (data_path / "boxes").with_suffix(
+        output_path = (data_path / "predictions").with_suffix(
             ".parquet" if as_parquet else ".csv")
     output_path = Path(output_path)
     cli.prompt_overwrite(output_path, "Output path")
@@ -44,7 +44,7 @@ def main(config):
     # TODO: Can we just run with an entire list of images?
     # Apply the model to each image.
     results = []
-    for path, image in data.iter_read():
+    for path, image in data.iter_read_arenas():
         print(f"Detecting flies in '{path}'")
 
         # Preprocess the image.

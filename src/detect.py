@@ -2,7 +2,6 @@
 """
 
 from pathlib import Path
-import sys
 
 import cv2
 import numpy as np
@@ -11,7 +10,7 @@ import pandas as pd
 from . import cli
 from . import io
 from . import ops
-from . import extract_extropolate
+from . import temperature as tmp
 
 
 def main(config):
@@ -99,7 +98,7 @@ def main(config):
 
     # Compute temperature estimates.
     results["temperature"] = x_cm.map(
-        lambda x: extract_extropolate.extropolate(x, temperature_table))
+        lambda x: tmp.extropolate(x, temperature_table))
 
     if as_parquet:
         results.to_parquet(output_path, index = False)

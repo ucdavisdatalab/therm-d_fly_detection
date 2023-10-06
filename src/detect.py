@@ -98,7 +98,7 @@ def main(config):
 
     # Compute temperature estimates.
     results["temperature"] = x_cm.map(
-        lambda x: tmp.extropolate(x, temperature_table))
+        lambda x: tmp.estimate(x, temperature_table))
 
     if as_parquet:
         results.to_parquet(output_path, index = False)

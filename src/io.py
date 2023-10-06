@@ -326,11 +326,27 @@ def read_fly_template(path):
     return templates, shape
 
 
-def read_config(path):
+def read_config(path, populate_data_path = ["register", "detect", "match"]):
     """Read a TOML configuration file.
+
+    Arguments
+    ---------
+    path: str or Path
+        Path to TOML configuration file.
+
+    populate_data_path: list of str
+        List of keys for subconfigurations (dicts) to which the top-level
+        `data_path` entry should be propagated if no `data_path` entry is
+        present.
     """
     with open(path, "rb") as f:
-        return tomllib.load(f)
+        config = tomllib.load(f)
+
+    for key in populate_data_path:
+        if key in config and "data_path" not in config[key]:
+            config[key]["data_path"] = config["data_path"]
+
+    return config
 
 
 def get_distance(dict, name):

@@ -7,7 +7,6 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import sys
 
 from . import cli
 from . import io
@@ -36,15 +35,10 @@ def main(config):
     output_path = Path(output_path)
     cli.prompt_overwrite(output_path, "Output path")
 
-    if config['debug']:
-        debug_folder = data_path / 'debug'
-        debug_folder.mkdir(exist_ok = True)
-
-        if debug_folder.exists():
-            msg = f"'{debug_folder}' exists. Continue and overwrite (y/n)? "
-            if not cli.prompt_yes(msg):
-                sys.exit(1)
-        print(f"Output path: '{output_path}'\n")
+    is_debug = config.get("debug", False)
+    if is_debug:
+        debug_dir = data_path / "debug/predictions"
+        cli.prompt_overwrite(debug_dir, "Debug directory", mkdir = True)
 
     # Load the model.
     model = ort.InferenceSession(model_path)
@@ -93,12 +87,12 @@ def main(config):
         # TODO: Option to save boxes as images.
         # debug then run the following
 
-        if config["debug"]:
+        if is_debug:
             temp = result.loc[:, ['x_px', 'y_px', 'width_px', 'height_px']]
             temp = temp.to_numpy()
             img_name = path.name.rsplit("/", 1)[-1]
 
-        # Flipping temperatrue table to iterate through every degree
+            # Flipping temperatrue table to iterate through every degree
 
             flipped = temperature_table[1, :]
             flipped = np.vstack([flipped, temperature_table[0, :]])
@@ -123,7 +117,7 @@ def main(config):
             text_values = mat[1]
             text_height = int(w * .0175)
 
-        # plotting boxes and degree lines and saving into folder
+            # plotting boxes and degree lines and saving into folder
 
             fig, ax = plt.subplots(1, 1, figsize = (20, 20))
             viz.plot_image(orig, ax = ax)
@@ -139,7 +133,7 @@ def main(config):
                     x_pos, text_height, f'{text_val}', ha='right', va='bottom'
                     , fontsize=12, color = 'b')
 
-            plt.savefig(f"{debug_folder}/{img_name}")
+            plt.savefig(debug_dir / img_name)
             plt.close()
 
     results = pd.concat(results)

@@ -104,7 +104,6 @@ def main(args):
         if config["debug"]:
             temp = result.loc[:, ['x_px', 'y_px', 'width_px', 'height_px']]
             temp = temp.to_numpy()
-
             img_name = path.name.rsplit("/", 1)[-1]
 
         # Flipping temperatrue table to iterate through every degree
@@ -127,6 +126,7 @@ def main(args):
             mat = arr[:, indices_to_keep[0]]
             x_positions = mat[0]
             text_values = mat[1]
+            text_height = int(w * .0175)
 
         # plotting boxes and degree lines and saving into folder
 
@@ -139,9 +139,8 @@ def main(args):
 
             for x_pos, text_val in zip(x_positions, text_values):
                 ax.axvline(x=x_pos, color='r', linestyle='--', alpha = .15)
-                ax.text(x_pos, 25, f'{text_val}', ha='right', va='bottom', fontsize=12, color = 'b')
+                ax.text(x_pos, text_height, f'{text_val}', ha='right', va='bottom', fontsize=12, color = 'b')
                 
-            
             plt.savefig(f"{debug_folder}/{img_name}")
             plt.close()
 

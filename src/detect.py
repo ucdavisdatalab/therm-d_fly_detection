@@ -54,27 +54,32 @@ def main(config):
 
         # Preprocess the image.
         orig = image.copy()
-        h, w = image.shape[:2]
+        arena_h, arena_w = image.shape[:2]
         image, pad_x, pad_y = preprocess_image(image)
-        new_h, new_w = image.shape[-2:]
+        padded_h, padded_w = image.shape[-2:]
 
         # Apply the model.
         result = model.run(None, {"images": image})
         result = result[0][0, :, :].transpose()
-
-        # FIXME: Remove boxes that are in the padding area.
 
         # Convert results to a data frame.
         result = pd.DataFrame(
             result, columns = [
                 "x_px", "y_px", "width_px", "height_px", "confidence"])
         result["path"] = str(path)
-        result["arena_width_px"] = w
-        result["arena_height_px"] = h
+        result["arena_width_px"] = arena_w
+        result["arena_height_px"] = arena_h
+
+        # Remove boxes that are in the padding area.
+        model_arena_w = padded_w - pad_x
+        model_arena_h = padded_h - pad_y
+        result.query(
+            "x_px <= @model_arena_w and y_px <= @model_arena_h"
+            , inplace = True)
 
         # Correct for image rescaling.
-        result[["x_px", "width_px"]] *= w / (new_w - pad_x)
-        result[["y_px", "height_px"]] *= h / (new_h - pad_y)
+        result[["x_px", "width_px"]] *= arena_w / model_arena_w
+        result[["y_px", "height_px"]] *= arena_h / model_arena_h
 
         min_conf = config["minimum_confidence"]
         result = result.loc[min_conf <= result["confidence"], :]
@@ -114,7 +119,7 @@ def main(config):
             mat = arr[:, indices_to_keep[0]]
             x_positions = mat[0]
             text_values = mat[1]
-            text_height = int(w * .0175)
+            text_height = int(arena_w * .0175)
 
             # plotting boxes and degree lines and saving into folder
 

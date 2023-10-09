@@ -69,7 +69,7 @@ def main(args):
         # Preprocess the image.
         orig = image.copy()
         h, w = image.shape[:2]
-        image = preprocess_image(image)
+        image, pad_x, pad_y = preprocess_image(image)
         new_h, new_w = image.shape[-2:]
 
         # Apply the model.
@@ -87,8 +87,8 @@ def main(args):
         result["arena_height_px"] = h
 
         # Correct for image rescaling.
-        result[["x_px", "width_px"]] *= w / new_w
-        result[["y_px", "height_px"]] *= h / new_h
+        result[["x_px", "width_px"]] *= w / (new_w - pad_x)
+        result[["y_px", "height_px"]] *= h / (new_h - pad_y)
 
         min_conf = config["minimum_confidence"]
         result = result.loc[min_conf <= result["confidence"], :]
@@ -178,9 +178,10 @@ def preprocess_image(image, shape = (384, 640)):
     """
     # Rescale and pad.
     image = ops.rescale(image, shape)
+    pad_y = shape[0] - image.shape[0]
+    pad_x = shape[1] - image.shape[1]
     image = cv2.copyMakeBorder(
-        image, 0, shape[0] - image.shape[0], 0, shape[1] - image.shape[1]
-        , cv2.BORDER_CONSTANT, 0)
+        image, 0, pad_y, 0, pad_x, cv2.BORDER_CONSTANT, 0)
 
     # Convert image to float32.
     image = image.astype(np.float32)
@@ -190,4 +191,4 @@ def preprocess_image(image, shape = (384, 640)):
     image = np.moveaxis(image, -1, 0)
     image = image[np.newaxis, ...]
 
-    return image
+    return image, pad_x, pad_y

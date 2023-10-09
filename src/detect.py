@@ -88,10 +88,9 @@ def main(config):
 
         # FIXME: Non-maximum suppression.
 
-        # TODO: Option to save boxes as images.
-
         results.append(result)
 
+        # TODO: Option to save boxes as images.
         # debug then run the following
 
         if config["debug"]:
@@ -101,11 +100,11 @@ def main(config):
 
         # Flipping temperatrue table to iterate through every degree
 
-            flipped = temperature_table[1,:]
-            flipped = np.vstack([flipped, temperature_table[0,:]])
+            flipped = temperature_table[1, :]
+            flipped = np.vstack([flipped, temperature_table[0, :]])
 
-            lb = int(flipped[0,0])
-            ub = int(-(-flipped[0,-1]//1))
+            lb = int(flipped[0, 0])
+            ub = int(-(-flipped[0, -1] // 1))
 
             x_lines = []
             degrees = []
@@ -113,9 +112,12 @@ def main(config):
                 x_lines.append(tmp.estimate(i, flipped))
                 degrees.append(i)
 
-            vert_lines = [orig.shape[1] * i / apparatuses[data.apparatus]['horizontal'] for i in x_lines]
+            vert_lines = [
+                orig.shape[1] * i / apparatuses[data.apparatus]['horizontal']
+                for i in x_lines]
             arr = np.array([vert_lines, degrees])
-            indices_to_keep = np.where((arr[0] >= 0) & (arr[0] <= orig.shape[1]))
+            indices_to_keep = np.where(
+                (arr[0] >= 0) & (arr[0] <= orig.shape[1]))
             mat = arr[:, indices_to_keep[0]]
             x_positions = mat[0]
             text_values = mat[1]
@@ -128,11 +130,14 @@ def main(config):
 
             for i in range(temp.shape[0]):
                 xc, yc, w, h = temp[i, :4]
-                viz.plot_box((yc - h/2, xc - w/2, yc + h/2, xc + w/2), ax)
+                viz.plot_box(
+                    (yc - h / 2, xc - w / 2, yc + h / 2, xc + w / 2), ax)
 
             for x_pos, text_val in zip(x_positions, text_values):
                 ax.axvline(x=x_pos, color='r', linestyle='--', alpha = .15)
-                ax.text(x_pos, text_height, f'{text_val}', ha='right', va='bottom', fontsize=12, color = 'b')
+                ax.text(
+                    x_pos, text_height, f'{text_val}', ha='right', va='bottom'
+                    , fontsize=12, color = 'b')
 
             plt.savefig(f"{debug_folder}/{img_name}")
             plt.close()

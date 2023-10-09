@@ -6,6 +6,7 @@ from pathlib import Path
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import onnxruntime as ort
 import pandas as pd
 
 from . import cli
@@ -16,8 +17,6 @@ from . import viz
 
 
 def main(config):
-    import onnxruntime as ort
-
     apparatuses = config["apparatuses"]
     config = config["detect"]
 

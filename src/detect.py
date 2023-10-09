@@ -2,26 +2,23 @@
 """
 
 from pathlib import Path
-import sys
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import sys
 
 from . import cli
 from . import io
 from . import ops
-from . import extract_extropolate
+from . import temperature as tmp
 from . import viz
 
 
-def main(args):
+def main(config):
     import onnxruntime as ort
 
-    # Read the config file.
-    print(f"Config path: '{args.config}'")
-    config = io.read_config(args.config)
     apparatuses = config["apparatuses"]
     config = config["detect"]
 
@@ -32,16 +29,12 @@ def main(args):
 
     # Set up the output path.
     as_parquet = config.get("as_parquet", False)
-    out_path = config.get("output_path")
-    if out_path is None:
-        out_path = (data_path / "boxes").with_suffix(
+    output_path = config.get("output_path")
+    if output_path is None:
+        output_path = (data_path / "predictions").with_suffix(
             ".parquet" if as_parquet else ".csv")
-    out_path = Path(out_path)
-    if out_path.exists():
-        msg = f"'{out_path}' exists. Continue and overwrite (y/n)? "
-        if not cli.prompt_yes(msg):
-            sys.exit(1)
-    print(f"Output path: '{out_path}'\n")
+    output_path = Path(output_path)
+    cli.prompt_overwrite(output_path, "Output path")
 
     if config['debug']:
         debug_folder = data_path / 'debug'
@@ -51,7 +44,7 @@ def main(args):
             msg = f"'{debug_folder}' exists. Continue and overwrite (y/n)? "
             if not cli.prompt_yes(msg):
                 sys.exit(1)
-        print(f"Output path: '{out_path}'\n")
+        print(f"Output path: '{output_path}'\n")
 
     # Load the model.
     model = ort.InferenceSession(model_path)
@@ -63,7 +56,7 @@ def main(args):
     # TODO: Can we just run with an entire list of images?
     # Apply the model to each image.
     results = []
-    for path, image in data.iter_read():
+    for path, image in data.iter_read_arenas():
         print(f"Detecting flies in '{path}'")
 
         # Preprocess the image.
@@ -117,9 +110,9 @@ def main(args):
             x_lines = []
             degrees = []
             for i in range(lb, ub + 1):
-                x_lines.append(extract_extropolate.extropolate(i, flipped))
+                x_lines.append(tmp.estimate(i, flipped))
                 degrees.append(i)
-            
+
             vert_lines = [orig.shape[1] * i / apparatuses[data.apparatus]['horizontal'] for i in x_lines]
             arr = np.array([vert_lines, degrees])
             indices_to_keep = np.where((arr[0] >= 0) & (arr[0] <= orig.shape[1]))
@@ -140,7 +133,7 @@ def main(args):
             for x_pos, text_val in zip(x_positions, text_values):
                 ax.axvline(x=x_pos, color='r', linestyle='--', alpha = .15)
                 ax.text(x_pos, text_height, f'{text_val}', ha='right', va='bottom', fontsize=12, color = 'b')
-                
+
             plt.savefig(f"{debug_folder}/{img_name}")
             plt.close()
 
@@ -164,13 +157,13 @@ def main(args):
 
     # Compute temperature estimates.
     results["temperature"] = x_cm.map(
-        lambda x: extract_extropolate.extropolate(x, temperature_table))
+        lambda x: tmp.estimate(x, temperature_table))
 
     if as_parquet:
-        results.to_parquet(out_path, index = False)
+        results.to_parquet(output_path, index = False)
     else:
-        results.to_csv(out_path, index = False)
-    print(f"Wrote '{out_path}'")
+        results.to_csv(output_path, index = False)
+    print(f"Wrote '{output_path}'")
 
 
 def preprocess_image(image, shape = (384, 640)):

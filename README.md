@@ -13,31 +13,181 @@ Links:
 
 [google]: https://drive.google.com/drive/folders/1FIguz398nbSabeofCjJUHQ59yog626J6
 
-## File and Directory Structure
 
-The directory structure for the project is:
+## Installation
+
+Make sure your computer has git installed. You can learn more about git from
+DataLab's ["Introduction to Version Control"][intro-vcs] workshop reader.
+
+[intro-vcs]: https://ucdavisdatalab.github.io/workshop_introduction_to_version_control/
+
+Use `git clone` to copy this repository from GitHub to your computer:
+
+```sh
+git clone git@github.com:datalab-dev/2023_project_hamada_fly.git
+```
+
+Change directories to the cloned repo:
+```
+cd 2023_project_hamada_fly/
+```
+
+Make sure your computer has conda or mamba installed. You can learn more about
+these tools from [this section][conda-reader] of DataLab's "Making Python
+Projects & Environments Reproducible" workshop reader. We recommend using mamba
+because it's generally faster, and we provide mamba commands below. If you're
+using conda, replace "mamba" with "conda" in the commands.
+
+[conda-reader]: https://ucdavisdatalab.github.io/workshop_intermediate_python/chapters/02_reproducible.html#what-s-an-environment
+
+Use conda or mamba to recreate the Python environment required by the fly
+detection tools:
+
+```sh
+mamba env create --file env.yml
+```
+
+This will create an environment named `fly`. Finally, activate the environment:
+
+```sh
+mamba activate fly
+```
+
+Now you're ready to use the fly detection tools!
+
+
+## Usage
+
+### Data Format
+
+The fly detection tools assume a standard format for data sets:
 
 ```
-env.yml       Main Conda environment (with OpenCV, etc)
-tess.yml      Conda environment for Tesseract
-README.md     This file
+YYYY-MM-DD_apparatus/       the data set directory
+├── photos/                 original photos, in JPEG format
+└── temperatures.xlsx       temperature spreadsheet, in XLSX format
+```
+
+The data set directory must be named with the date and apparatus name. The
+photos in `photos/` can have any name but must have extension `.jpg` or
+`.jpeg`. The `.xlsx` file can have any name. In general, it's not a good idea
+to put spaces in file names (use at your own risk!).
+
+For example, one of the data sets we used during development had this format:
+
+```
+2023-07-19_biden
+├── photos/
+│   ├── 2023-07-19_biden_photos_01.JPG
+│   ├── 2023-07-19_biden_photos_02.JPG
+│   ├── 2023-07-19_biden_photos_03.JPG
+│   ├── 2023-07-19_biden_photos_04.JPG
+│   ├── ...
+│   └── 2023-07-19_biden_photos_42.JPG
+└── 230719_Biden_Leia_template.xlsx
+```
+
+
+### Workflow
+
+For an appropriately formatted data set, the fly detection workflow consists of
+two steps:
+
+1.  **Arena Registration** (the `register` command). For each image in a data
+    set's `photos/` subdirectory:
+    1)  Standardize the brightness and contrast.
+    2)  Find the registration marks.
+    3)  Rotate as needed so that the image is not upside-down or sideways.
+    4)  Correct for perspective distortion so that the registration marks form
+        a perfect rectangle.
+    5)  Crop to the rectangle.
+    6)  Save the cropped image in the data set's `arenas/` subdirectory.
+
+2.  **Fly Detection** (the `detect` command). For each image in a data set's
+    `arenas/` subdirectory:
+    1)  Use the model to predict fly locations as bounding boxes.
+    2)  Remove bounding boxes with too much overlap (the model typically makes
+        some redundant predictions).
+    3)  Estimate the temperature at each fly's location.
+    4)  Save the predicted fly locations and estimated temperatures to a `.csv`
+        or `.parquet` file in the data set directory.
+
+These steps are implemented as two different command-line commands (`register`
+and `detect`, respectively).
+
+All of the command-line commands have only one argument: a path to a [TOML][]
+configuration file. TOML is a plain-text configuration file format designed to
+be easy to read and write. An example configuration file is provided in this
+repo at `configs/defaults.toml`. You can open and edit TOML files with a text
+editor such as [Notepad++][], [TextEdit][], or [nano][].
+
+[TOML]: https://toml.io/
+[Notepad++]: https://notepad-plus-plus.org/
+[TextEdit]: https://support.apple.com/guide/textedit/welcome/mac
+[nano]: https://en.wikipedia.org/wiki/GNU_nano
+
+The TOML config file contains settings for each command, as well as physical
+measurements (in centimeters) for each apparatus. We recommend that you create
+a new TOML config file for each data set, so that you have a record of the
+settings you used to process each data set. The easiest way to do this is to
+copy `configs/defaults.toml` or another config file and then edit as needed.
+
+In the TOML config file, the most important setting is `data_path`, which
+should be set to the path to the data set directory. This setting and others
+are documented in `configs/defaults.toml`.
+
+Once you've created a TOML config file, for example
+`configs/2023-07-19_biden.toml`, you can run arena registration. In a terminal,
+navigate to the repo (with `cd`) and make sure the `fly` environment is
+activated (`mamba activate fly`). Then run:
+
+```sh
+python -m src register configs/2023-07-19_biden.toml
+```
+
+This will create an `arenas/` subdirectory in the data set directory. You can
+inspect the images in `arenas/` to check that the arenas were detected
+correctly. Arena detection typically fails if the registration marks are
+covered in the original photo or the original photo has poor brightness or
+contrast. As a failsafe, you can manually specify the pixel coordinates of the
+apparatus corners in the TOML configuration file.
+
+Next, you can run fly detection. In the terminal, run:
+
+```sh
+python -m src detect configs/2023-07-19_biden.toml
+```
+
+This will create a `predictions.csv` file in the data set directory. The format
+of this file is described in the following section.
+
+
+### Output Format
+
+
+### Training the Model
+
+
+## Directories and Files
+
+The directories and files in this repository are:
+
+```
+configs/      TOML configurations for commands
 data/         Data sets (files > 1MB go on Google Drive)
 docs/         Supporting documents
-notebooks/    Jupyter and RMarkdown notebook source files
-reports/      HTML or PDF reports generated from notebooks
-└── figures/  Graphics and figures to be used in reporting
+models/       Deep learning models for fly detection
+notebooks/    Jupyter notebook source files
 src/          Python source code
+
+README.md     This file
+env.yml       Main Conda environment (with OpenCV, etc)
+tess.yml      Conda environment for Tesseract
 ```
 
-<!--
-The files in the `data/` directory are:
+## Contributing
 
-```
-
-```
--->
-
-## Notebooks
+_This section is about how to contribute notebooks to the repo._
 
 Jupyter notebooks are stored in the repo in Markdown format (`.md`) via
 [Jupytext][]. This makes it easier to see changes to the notebooks in version

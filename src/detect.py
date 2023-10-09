@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -12,6 +13,7 @@ from . import cli
 from . import io
 from . import ops
 from . import extract_extropolate
+from . import viz
 
 
 def main(args):
@@ -41,6 +43,8 @@ def main(args):
             sys.exit(1)
     print(f"Output path: '{out_path}'\n")
 
+
+
     # Load the model.
     model = ort.InferenceSession(model_path)
 
@@ -51,10 +55,12 @@ def main(args):
     # TODO: Can we just run with an entire list of images?
     # Apply the model to each image.
     results = []
+    count = 0
     for path, image in data.iter_read():
         print(f"Detecting flies in '{path}'")
 
         # Preprocess the image.
+        orig = image.copy()
         h, w = image.shape[:2]
         image = preprocess_image(image)
         new_h, new_w = image.shape[-2:]
@@ -80,11 +86,58 @@ def main(args):
         min_conf = config["minimum_confidence"]
         result = result.loc[min_conf <= result["confidence"], :]
 
+      
         # FIXME: Non-maximum suppression.
 
         # TODO: Option to save boxes as images.
 
         results.append(result)
+
+        # have if statement like if --debug then run the following
+        # sub df for plotting boxes
+
+        temp = result.loc[:, ['x_px', 'y_px', 'width_px', 'height_px']]
+        temp = temp.to_numpy()
+
+        #Flipping temperatrue table to iterate through every degree
+
+        flipped = temperature_table[1,:]
+        flipped = np.vstack([flipped, temperature_table[0,:]])
+
+        lb = int(flipped[0,0])
+        ub = -(-flipped[0,-1]//1)
+
+        x_lines = []
+        degrees = []
+        for i in range(lb, int(ub) + 1):
+            x_lines.append(extract_extropolate.extropolate(i, flipped))
+            degrees.append(i)
+            
+        vert_lines = [orig.shape[1] * i / apparatuses[data.apparatus]['horizontal'] for i in x_lines]
+        arr = np.array([vert_lines, degrees])
+        indices_to_keep = np.where((arr[0] >= 0) & (arr[0] <= orig.shape[1]))
+        mat = arr[:, indices_to_keep[0]]
+        x_positions = mat[0]
+        text_values = mat[1]
+
+        fig, ax = plt.subplots(1, 1, figsize = (20, 20))
+        viz.plot_image(orig, ax = ax)
+
+        for i in range(temp.shape[0]):
+            xc, yc, w, h = temp[i, :4]
+            viz.plot_box((yc - h/2, xc - w/2, yc + h/2, xc + w/2), ax)
+
+        for x_pos, text_val in zip(x_positions, text_values):
+            ax.axvline(x=x_pos, color='r', linestyle='--', alpha = .15)
+            ax.text(x_pos, 25, f'{text_val}', ha='right', va='bottom', fontsize=12, color = 'b')
+            count
+            
+        folder_path = 'outputs/2023-08-11_shiny/debug'
+
+        plt.savefig(f"{folder_path}{count}")
+        count += 1
+        plt.close()
+
 
     results = pd.concat(results)
 

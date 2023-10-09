@@ -49,7 +49,10 @@ from src.viz import *
 ```python
 biden = FlyDatasetReader("../data/2023-03-10_biden")#, max_size = 1_500)
 blank = biden.read_blank()
-img0 = biden.read(0)
+img0 = biden.read(0)[1]
+
+img0.shape
+plot_image(img0a)
 ```
 
 ## Rotation
@@ -90,14 +93,16 @@ if not template_path.is_file():
 ```
 
 ```python
-img0a = img0[1470:3750, 1070:5350]
+img0a = img0[1470:3750, 1070:5350] #arena shape
+print(img0a.shape) #horizontal 4280
 plot_image(img0a)
 ```
 
 ```python
-img16 = biden.read(16)
+img16 = biden.read(16)[1]
 img16a = img16[1470:3750, 1070:5350]
 plot_image(img16a)
+img16a.shape #4280 pixel
 ```
 
 ### SQDIFF_NORMED

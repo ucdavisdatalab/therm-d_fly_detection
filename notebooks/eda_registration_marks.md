@@ -125,11 +125,9 @@ Then make a perspective correction with `cv2.warpPerspective`.
 
 ```
 
-<!-- #region jp-MarkdownHeadingCollapsed=true -->
 ## Template Matching
 
 How well will the registration marks work with template matching?
-<!-- #endregion -->
 
 ```python
 mark = blank[380:400, 258:278]

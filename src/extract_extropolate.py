@@ -12,6 +12,7 @@ def get_matrix(path):
     df = df.to_numpy()
     return(df)
 
+
 def extropolate(X, mat):
     ''' Piecewise extroploation function where X is a distance input and the outputs gives a guess for the temperature'''
     if np.min(mat[0]) > X:

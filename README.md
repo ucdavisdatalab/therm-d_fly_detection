@@ -13,47 +13,16 @@ Links:
 
 [google]: https://drive.google.com/drive/folders/1FIguz398nbSabeofCjJUHQ59yog626J6
 
+Contents:
 
-## Installation
-
-Make sure your computer has git installed. You can learn more about git from
-DataLab's ["Introduction to Version Control"][intro-vcs] workshop reader.
-
-[intro-vcs]: https://ucdavisdatalab.github.io/workshop_introduction_to_version_control/
-
-Use `git clone` to copy this repository from GitHub to your computer:
-
-```sh
-git clone git@github.com:datalab-dev/2023_project_hamada_fly.git
-```
-
-Change directories to the cloned repo:
-```
-cd 2023_project_hamada_fly/
-```
-
-Make sure your computer has conda or mamba installed. You can learn more about
-these tools from [this section][conda-reader] of DataLab's "Making Python
-Projects & Environments Reproducible" workshop reader. We recommend using mamba
-because it's generally faster, and we provide mamba commands below. If you're
-using conda, replace "mamba" with "conda" in the commands.
-
-[conda-reader]: https://ucdavisdatalab.github.io/workshop_intermediate_python/chapters/02_reproducible.html#what-s-an-environment
-
-Use conda or mamba to recreate the Python environment required by the fly
-detection tools:
-
-```sh
-mamba env create --file env.yml
-```
-
-This will create an environment named `fly`. Finally, activate the environment:
-
-```sh
-mamba activate fly
-```
-
-Now you're ready to use the fly detection tools!
+* [Usage](#usage)
+    - [Data Format](#data-format)
+    - [Workflow](#workflow)
+    - [Output Format](#output-format)
+    - [Training the Model](#training-the-model)
+* [Directories and Files](#directories-and-files)
+* [Installation](#installation)
+* [Contributing](#contributing)
 
 
 ## Usage
@@ -86,7 +55,6 @@ For example, one of the data sets we used during development had this format:
 │   └── 2023-07-19_biden_photos_42.JPG
 └── 230719_Biden_Leia_template.xlsx
 ```
-
 
 ### Workflow
 
@@ -271,6 +239,7 @@ of the repo. Note that the training script was designed and tested for training
 the original pretrained `YOLOv8x` model; it was not tested for additional
 training of the fly detection model, so some editing may be necessary.
 
+
 ## Directories and Files
 
 The directories and files in this repository are:
@@ -290,6 +259,49 @@ tess.yml      Conda environment for Tesseract
 
 Each `.md` file in `notebooks/` and `.py` file in `src/` has a brief
 description at the top of the file.
+
+
+## Installation
+
+Make sure your computer has git installed. You can learn more about git from
+DataLab's ["Introduction to Version Control"][intro-vcs] workshop reader.
+
+[intro-vcs]: https://ucdavisdatalab.github.io/workshop_introduction_to_version_control/
+
+Use `git clone` to copy this repository from GitHub to your computer:
+
+```sh
+git clone git@github.com:datalab-dev/2023_project_hamada_fly.git
+```
+
+Change directories to the cloned repo:
+```
+cd 2023_project_hamada_fly/
+```
+
+Make sure your computer has conda or mamba installed. You can learn more about
+these tools from [this section][conda-reader] of DataLab's "Making Python
+Projects & Environments Reproducible" workshop reader. We recommend using mamba
+because it's generally faster, and we provide mamba commands below. If you're
+using conda, replace "mamba" with "conda" in the commands.
+
+[conda-reader]: https://ucdavisdatalab.github.io/workshop_intermediate_python/chapters/02_reproducible.html#what-s-an-environment
+
+Use conda or mamba to recreate the Python environment required by the fly
+detection tools:
+
+```sh
+mamba env create --file env.yml
+```
+
+This will create an environment named `fly`. Finally, activate the environment:
+
+```sh
+mamba activate fly
+```
+
+Now you're ready to use the fly detection tools!
+
 
 ## Contributing
 

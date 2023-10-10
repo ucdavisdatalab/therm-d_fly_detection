@@ -13,47 +13,18 @@ Links:
 
 [google]: https://drive.google.com/drive/folders/1FIguz398nbSabeofCjJUHQ59yog626J6
 
+Contents:
 
-## Installation
+* [Usage](#usage)
+    - [Data Format](#data-format)
+    - [Workflow](#workflow)
+    - [Output Format](#output-format)
+* [Directories and Files](#directories-and-files)
+* [Installation](#installation)
+* [Contributing](#contributing)
+* [Training the Model](#training-the-model)
 
-Make sure your computer has git installed. You can learn more about git from
-DataLab's ["Introduction to Version Control"][intro-vcs] workshop reader.
-
-[intro-vcs]: https://ucdavisdatalab.github.io/workshop_introduction_to_version_control/
-
-Use `git clone` to copy this repository from GitHub to your computer:
-
-```sh
-git clone git@github.com:datalab-dev/2023_project_hamada_fly.git
-```
-
-Change directories to the cloned repo:
-```
-cd 2023_project_hamada_fly/
-```
-
-Make sure your computer has conda or mamba installed. You can learn more about
-these tools from [this section][conda-reader] of DataLab's "Making Python
-Projects & Environments Reproducible" workshop reader. We recommend using mamba
-because it's generally faster, and we provide mamba commands below. If you're
-using conda, replace "mamba" with "conda" in the commands.
-
-[conda-reader]: https://ucdavisdatalab.github.io/workshop_intermediate_python/chapters/02_reproducible.html#what-s-an-environment
-
-Use conda or mamba to recreate the Python environment required by the fly
-detection tools:
-
-```sh
-mamba env create --file env.yml
-```
-
-This will create an environment named `fly`. Finally, activate the environment:
-
-```sh
-mamba activate fly
-```
-
-Now you're ready to use the fly detection tools!
+[top]: #hamada-fly-behavior-startup-project
 
 
 ## Usage
@@ -87,6 +58,7 @@ For example, one of the data sets we used during development had this format:
 └── 230719_Biden_Leia_template.xlsx
 ```
 
+([back to top][top])
 
 ### Workflow
 
@@ -118,9 +90,10 @@ and `detect`, respectively).
 All of the command-line commands have only one argument: a path to a [TOML][]
 configuration file. TOML is a plain-text configuration file format designed to
 be easy to read and write. An example configuration file is provided in this
-repo at `configs/defaults.toml`. You can open and edit TOML files with a text
-editor such as [Notepad++][], [TextEdit][], or [nano][].
+repo at [`configs/defaults.toml`][defaults]. You can open and edit TOML files
+with a text editor such as [Notepad++][], [TextEdit][], or [nano][].
 
+[defaults]: configs/defaults.toml
 [TOML]: https://toml.io/
 [Notepad++]: https://notepad-plus-plus.org/
 [TextEdit]: https://support.apple.com/guide/textedit/welcome/mac
@@ -147,10 +120,15 @@ python -m src register configs/2023-07-19_biden.toml
 
 This will create an `arenas/` subdirectory in the data set directory. You can
 inspect the images in `arenas/` to check that the arenas were detected
-correctly. Arena detection typically fails if the registration marks are
-covered in the original photo or the original photo has poor brightness or
-contrast. As a failsafe, you can manually specify the pixel coordinates of the
-apparatus corners in the TOML configuration file.
+correctly.
+
+Arena detection typically fails if the registration marks are covered in the
+original photo or the original photo has poor brightness or contrast. As a
+failsafe, you can manually specify the pixel coordinates of the apparatus
+corners in the TOML configuration file with the `arena` setting. An example of
+this is provided in [`configs/2023-08-07_biden.toml`][manual-arena].
+
+[manual-arena]: configs/2023-08-07_biden.toml
 
 Next, you can run fly detection. In the terminal, run:
 
@@ -158,14 +136,52 @@ Next, you can run fly detection. In the terminal, run:
 python -m src detect configs/2023-07-19_biden.toml
 ```
 
-This will create a `predictions.csv` file in the data set directory. The format
-of this file is described in the following section.
+This will create a `predictions.csv` file and `predictions/` subdirectory in
+the data set directory. The `predictions/` subdirectory contains visualizations
+of the predicted flies as JPEG images (one for each arena image). The images
+show each detected fly's bounding box, an identification number (ID) for the
+box, and grid lines every 0.5 degrees Celsius.
 
+Note that box IDs is not linked across images, so box `1` for the first image
+in a data set does not necessarily enclose the same fly as box `1` for the
+second image. Box `id` is only provided as a way to easily remove incorrect
+boxes.
+
+The format of `predictions.csv` is described in the next section.
+
+([back to top][top])
 
 ### Output Format
 
+The `predictions.csv` file created by the `detect` command has one row for each
+detected fly. The model detects a bounding box around each fly, so the columns
+contain data about the bounding box. The columns are:
 
-### Training the Model
+Column           | Description
+---------------- | -----------
+`id`             | identification number for the box (within the image)
+`x_px`           | x-coordinate of the box center, in pixels
+`y_px`           | y-coordinate of the box center, in pixels
+`width_px`       | width of the box, in pixels
+`height_px`      | height of the box, in pixels
+`confidence`     | confidence score for the box (from 0 lowest confidence to 1 highest confidence)
+`path`           | file path to arena image
+`arena_width_px` | width of the arena, in pixels
+`arena_height_px`| height of the arena, in pixels
+`x_cm`           | x-coordinate of the box center, in centimeters
+`y_cm`           | y-coordinate of the box center, in centimeters
+`temperature`    | estimated temperature at the box center, in degrees Celsius
+
+The file is a comma-separated values (CSV) file, which can be read and analyzed
+with data analysis software such as Excel, Tableau, Python, and R. The TOML
+config file also provides a setting to save the file in [Parquet][] format.
+Parquet is an open-standard for data exchange that provides [several
+benefits][benefits-parquet] over CSV files.
+
+[Parquet]: https://parquet.apache.org/
+[benefits-parquet]: https://ucdavisdatalab.github.io/workshop_reproducible_research/chapters/03_case_by_case_core.html#use-file-formats-effectively
+
+([back to top][top])
 
 
 ## Directories and Files
@@ -177,13 +193,79 @@ configs/      TOML configurations for commands
 data/         Data sets (files > 1MB go on Google Drive)
 docs/         Supporting documents
 models/       Deep learning models for fly detection
-notebooks/    Jupyter notebook source files
+notebooks/    Jupyter notebook source files (exploratory code)
 src/          Python source code
 
 README.md     This file
 env.yml       Main Conda environment (with OpenCV, etc)
 tess.yml      Conda environment for Tesseract
 ```
+
+Each `.md` file in `notebooks/` and `.py` file in `src/` has a brief
+description at the top of the file.
+
+([back to top][top])
+
+
+## Installation
+
+The fly detection tools are Unix command line tools, so some familiarity with
+the command line will make installing and using them easier. You can learn more
+about the Unix command line from DataLab's ["Introduction to the Unix Command
+Line][intro-cmd] workshop reader.
+
+[intro-cmd]: https://ucdavisdatalab.github.io/workshop_introduction_to_the_command_line/
+
+Make sure your computer has git installed. You can learn more about git from
+DataLab's ["Introduction to Version Control"][intro-vcs] workshop reader.
+
+[intro-vcs]: https://ucdavisdatalab.github.io/workshop_introduction_to_version_control/
+
+Use `git clone` to copy this repository from GitHub to your computer:
+
+```sh
+git clone git@github.com:datalab-dev/2023_project_hamada_fly.git
+```
+
+Change directories to the cloned repo:
+```sh
+cd 2023_project_hamada_fly/
+```
+
+Next, create a `models/` subdirectory:
+```sh
+mkdir models
+```
+
+Go to the [Google Drive][google] and download the file
+`models/2023-08-25_fly-detection.onnx` to the `models/` subdirectory you just
+created.
+
+Make sure your computer has conda or mamba installed. You can learn more about
+these tools from [this section][conda-reader] of DataLab's "Making Python
+Projects & Environments Reproducible" workshop reader. We recommend using mamba
+because it's generally faster, and we provide mamba commands below. If you're
+using conda, replace "mamba" with "conda" in the commands.
+
+[conda-reader]: https://ucdavisdatalab.github.io/workshop_intermediate_python/chapters/02_reproducible.html#what-s-an-environment
+
+Use conda or mamba to recreate the Python environment required by the fly
+detection tools:
+
+```sh
+mamba env create --file env.yml
+```
+
+This will create an environment named `fly`. Finally, activate the environment:
+
+```sh
+mamba activate fly
+```
+
+Now you're ready to use the fly detection tools!
+
+([back to top][top])
+
 
 ## Contributing
 
@@ -245,3 +327,78 @@ Jupytext extension for JupyterLab that can handle this process automatically.
 
 [jupytext-cli]: https://jupytext.readthedocs.io/en/latest/using-cli.html
 
+([back to top][top])
+
+
+## Training the Model
+
+The model has already been trained, so it is not necessary to train the model
+in order to use the fly detection tools described above. That said, if new
+annotated data becomes available, additional training may improve accuracy.
+
+The model is a [You Only Look Once (YOLO) v8][yolo] object detection model. It
+was trained on the UC Davis [Farm Cluster][farm]. The node has 64 CPUs, 256GB
+RAM, and a NVIDIA A100 GPU. Training for 200 epochs took approximately 2 hours. 
+
+[yolo]: https://github.com/ultralytics/ultralytics/
+[farm]: https://www.hpc.ucdavis.edu/clusters
+
+We created training data by [template matching][] 15-degree rotations of a
+manually cropped fly to each image in these data sets:
+
+* `2023-07-12_biden`
+* `2023-07-19_biden`
+* `2023-07-19_shiny`
+* `2023-07-22_shiny`
+* `2023-07-23_skywalker`
+* `2023-07-26_shiny`
+* `2023-08-09_biden`
+
+We then manually corrected these annotations (adding boxes around undetected
+flies and removing incorrect boxes) with the free [MakeSense][] annotation
+software. This process is time-consuming, as template matching is often
+inaccurate. Going forward, it is likely more efficient to manually-correct
+predictions from the current fly detection model.
+
+[template matching]: https://en.wikipedia.org/wiki/Template_matching
+[MakeSense]: https://www.makesense.ai/
+
+The command to run template matching is:
+
+```sh
+python -m src detect configs/defaults.toml
+```
+
+As with other commands, the TOML config file contains settings such as which
+data set to use. The resulting annotations are saved to the `match_labels/`
+subdirectory of the data set directory.
+
+After manually correcting the annotations in [MakeSense][], export the
+annotations in YOLO format and unzip the resulting `.zip` file into a `labels/`
+subdirectory of the data set directory.
+
+You can prepare a training data set, combining annotations for several data
+sets, with the command:
+
+```sh
+python -m src assemble configs/train.toml
+```
+
+See the TOML config file for settings.
+
+<!--
+TODO: Add instructions for setting up the training environment.
+-->
+
+Finally, to train the model, run:
+
+```sh
+python -m src.train configs/train.toml
+```
+
+When training is complete, the model will be saved in the `models/` directory
+of the repo. Note that the training script was designed and tested for training
+the original pretrained `YOLOv8x` model; it was not tested for additional
+training of the fly detection model, so some editing may be necessary.
+
+([back to top][top])

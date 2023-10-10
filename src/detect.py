@@ -50,7 +50,7 @@ def main(config):
     # Apply the model to each image.
     results = []
     for path, image in data.iter_read_arenas():
-        print(f"Detecting flies in '{path}'")
+        print(f"Image: '{path}'")
 
         # Preprocess the image.
         orig = image.copy()
@@ -59,6 +59,7 @@ def main(config):
         padded_h, padded_w = image.shape[-2:]
 
         # Apply the model.
+        print("  Detecting flies...")
         result = model.run(None, {"images": image})
         result = result[0][0, :, :].transpose()
 
@@ -83,20 +84,29 @@ def main(config):
 
         min_conf = config["minimum_confidence"]
         result = result.loc[min_conf <= result["confidence"], :]
+        print(f"  Found {result.shape[0]} flies above {min_conf}"
+              " minimum confidence.")
 
-        # FIXME: Non-maximum suppression.
+        # Non-maximum suppression.
+        print("  Suppressing redundant detections...")
+        max_iou = config.get("maximum_iou", 0.25)
+        ix = suppress_nonmax(
+            result[["x_px", "y_px", "width_px", "height_px"]].to_numpy()
+            , result["confidence"].to_numpy()
+            , max_iou)
+        result = result.iloc[ix, :]
+        print(f"  Kept {result.shape[0]} flies below {max_iou}"
+              " maximum IoU.")
 
         results.append(result)
 
-        # TODO: Option to save boxes as images.
-        # debug then run the following
-
+        # Option to save boxes as images.
         if is_debug:
             temp = result.loc[:, ['x_px', 'y_px', 'width_px', 'height_px']]
             temp = temp.to_numpy()
             img_name = path.name.rsplit("/", 1)[-1]
 
-            # Flipping temperatrue table to iterate through every degree
+            # Flip temperature table to iterate through every degree
 
             flipped = temperature_table[1, :]
             flipped = np.vstack([flipped, temperature_table[0, :]])
@@ -121,8 +131,7 @@ def main(config):
             text_values = mat[1]
             text_height = int(arena_w * .0175)
 
-            # plotting boxes and degree lines and saving into folder
-
+            # Plot boxes and degree lines
             fig, ax = plt.subplots(1, 1, figsize = (20, 20))
             viz.plot_image(orig, ax = ax)
 
@@ -137,8 +146,11 @@ def main(config):
                     x_pos, text_height, f'{text_val}', ha='right', va='bottom'
                     , fontsize=12, color = 'b')
 
+            # Save into folder
             plt.savefig(debug_dir / img_name)
             plt.close()
+            print(f"  Wrote '{debug_dir / img_name}'")
+            print()
 
     results = pd.concat(results)
 
@@ -188,3 +200,82 @@ def preprocess_image(image, shape = (384, 640)):
     image = image[np.newaxis, ...]
 
     return image, pad_x, pad_y
+
+
+def suppress_nonmax(boxes, confidence, maximum_iou = 0.25):
+    """Remove redundant bounding boxes by keeping only the highest-confidence
+    box in each group of similar boxes.
+
+    Arguments
+    ---------
+    boxes: np.ndarray
+        A matrix where each row corresponds to one box and there are 4 columns:
+        x center, y center, width, and height.
+
+    confidence: np.ndarray
+        An array of confidence scores, with one element for each row in
+        `boxes`.
+
+    maximum_iou: float
+        Maximum intersection-over-union (IoU) ratio for a lower-confidence box
+        to be kept. Two boxes have a high IoU ratio if most of their areas
+        overlap.
+
+    Returns
+    -------
+    out: np.ndarray
+        Indexes of rows to keep.
+    """
+    # Convert format from (x, y, w, h) to (left, right, top, bottom, area).
+    data = boxes
+    boxes = np.full((data.shape[0], 5), np.NaN)
+    boxes[:, 0] = data[:, 0] - 0.5 * data[:, 2]
+    boxes[:, 1] = data[:, 0] + 0.5 * data[:, 2]
+    boxes[:, 2] = data[:, 1] - 0.5 * data[:, 3]
+    boxes[:, 3] = data[:, 1] + 0.5 * data[:, 3]
+    boxes[:, 4] = data[:, 2] * data[:, 3]
+
+    ix_remaining = np.argsort(confidence)
+    ix_kept = np.full_like(ix_remaining, -1)
+    n_kept = 0
+    while len(ix_remaining) > 0:
+        # Of the remaining boxes, get the one with the highest similarity
+        # score. This is the "best" remaining box.
+        ix_best = ix_remaining[-1]
+        ix_remaining = ix_remaining[:-1]
+
+        # Keep the best box.
+        ix_kept[n_kept] = ix_best
+        n_kept += 1
+
+        # Compute intersection-over-union of best box with all remaining boxes.
+        ious = intersection_over_union(
+            boxes[ix_best, :], boxes[ix_remaining, :])
+        ix_remaining = ix_remaining[ious <= maximum_iou]
+
+    return ix_kept[:n_kept]
+
+
+def intersection_over_union(box, boxes):
+    """Compute the intersection-over-union for one box against many boxes.
+
+    Note: for efficiency, this function does not accept the standard YOLO box
+    format (x, y, w, h) as input.
+
+    Arguments
+    ---------
+    box: np.ndarray
+        An array which corresponds to one box, where the elements are the left,
+        right, top, bottom, and area.
+
+    boxes: np.ndarray
+        A matrix where each row corresponds to one box and there are 5 columns:
+        left, right, top, bottom, and area.
+    """
+    # Compute intersection area.
+    w = np.fmin(box[1], boxes[:, 1]) - np.fmax(box[0], boxes[:, 0])
+    h = np.fmin(box[3], boxes[:, 3]) - np.fmax(box[2], boxes[:, 2])
+
+    intersect_area = np.fmax(0, w) * np.fmax(0, h)
+    union_area = box[4] + boxes[:, 4] - intersect_area
+    return intersect_area / union_area

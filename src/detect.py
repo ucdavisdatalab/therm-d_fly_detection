@@ -34,7 +34,7 @@ def main(config):
     output_path = Path(output_path)
     cli.prompt_overwrite(output_path, "Output path")
 
-    is_debug = config.get("debug", True) #default should be on False, True for just testing
+    is_debug = config.get("debug", False) 
     if is_debug:
         debug_dir = data_path / "debug/predictions"
         cli.prompt_overwrite(debug_dir, "Debug directory", mkdir = True)

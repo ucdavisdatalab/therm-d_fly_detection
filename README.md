@@ -24,6 +24,8 @@ Contents:
 * [Installation](#installation)
 * [Contributing](#contributing)
 
+[top]: #hamada-fly-behavior-startup-project
+
 
 ## Usage
 
@@ -55,6 +57,8 @@ For example, one of the data sets we used during development had this format:
 │   └── 2023-07-19_biden_photos_42.JPG
 └── 230719_Biden_Leia_template.xlsx
 ```
+
+([back to top][top])
 
 ### Workflow
 
@@ -145,6 +149,7 @@ boxes.
 
 The format of `predictions.csv` is described in the next section.
 
+([back to top][top])
 
 ### Output Format
 
@@ -167,6 +172,7 @@ Column           | Description
 `y_cm`           | y-coordinate of the box center, in centimeters
 `temperature`    | estimated temperature at the box center, in degrees Celsius
 
+([back to top][top])
 
 ### Training the Model
 
@@ -239,6 +245,7 @@ of the repo. Note that the training script was designed and tested for training
 the original pretrained `YOLOv8x` model; it was not tested for additional
 training of the fly detection model, so some editing may be necessary.
 
+([back to top][top])
 
 ## Directories and Files
 
@@ -259,6 +266,8 @@ tess.yml      Conda environment for Tesseract
 
 Each `.md` file in `notebooks/` and `.py` file in `src/` has a brief
 description at the top of the file.
+
+([back to top][top])
 
 
 ## Installation
@@ -301,6 +310,8 @@ mamba activate fly
 ```
 
 Now you're ready to use the fly detection tools!
+
+([back to top][top])
 
 
 ## Contributing
@@ -363,3 +374,4 @@ Jupytext extension for JupyterLab that can handle this process automatically.
 
 [jupytext-cli]: https://jupytext.readthedocs.io/en/latest/using-cli.html
 
+([back to top][top])

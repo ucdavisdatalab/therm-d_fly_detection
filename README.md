@@ -202,6 +202,74 @@ Column           | Description
 
 ### Training the Model
 
+The model has already been trained, so it is not necessary to train the model
+in order to use the fly detection tools described above. That said, if new
+annotated data becomes available, additional training may improve accuracy.
+
+The model is a [You Only Look Once (YOLO) v8][yolo] object detection model. It
+was trained on the UC Davis [Farm Cluster][farm]. The node has 64 CPUs, 256GB
+RAM, and a NVIDIA A100 GPU. Training for 200 epochs took approximately 2 hours. 
+
+[yolo]: https://github.com/ultralytics/ultralytics/
+[farm]: https://www.hpc.ucdavis.edu/clusters
+
+We created training data by [template matching][] 15-degree rotations of a
+manually cropped fly to each image in these data sets:
+
+* `2023-07-12_biden`
+* `2023-07-19_biden`
+* `2023-07-19_shiny`
+* `2023-07-22_shiny`
+* `2023-07-23_skywalker`
+* `2023-07-26_shiny`
+* `2023-08-09_biden`
+
+We then manually corrected these annotations (adding boxes around undetected
+flies and removing incorrect boxes) with the free [MakeSense][] annotation
+software. This process is time-consuming, as template matching is often
+inaccurate. Going forward, it is likely more efficient to manually-correct
+predictions from the current fly detection model.
+
+[template matching]: https://en.wikipedia.org/wiki/Template_matching
+[MakeSense]: https://www.makesense.ai/
+
+The command to run template matching is:
+
+```sh
+python -m src detect configs/defaults.toml
+```
+
+As with other commands, the TOML config file contains settings such as which
+data set to use. The resulting annotations are saved to the `match_labels/`
+subdirectory of the data set directory.
+
+After manually correcting the annotations in [MakeSense][], export the
+annotations in YOLO format and unzip the resulting `.zip` file into a `labels/`
+subdirectory of the data set directory.
+
+You can prepare a training data set, combining annotations for several data
+sets, with the command:
+
+```sh
+python -m src assemble configs/train.toml
+```
+
+See the TOML config file for settings.
+
+<!--
+TODO: Add instructions for setting up the training environment.
+-->
+
+Finally, to train the model, run:
+
+```sh
+python -m src.train configs/train.toml
+```
+
+When training is complete, the model will be saved in the `models/` directory
+of the repo. Note that the training script was designed and tested for training
+the original pretrained `YOLOv8x` model; it was not tested for additional
+training of the fly detection model, so some editing may be necessary.
 
 ## Directories and Files
 
@@ -212,13 +280,16 @@ configs/      TOML configurations for commands
 data/         Data sets (files > 1MB go on Google Drive)
 docs/         Supporting documents
 models/       Deep learning models for fly detection
-notebooks/    Jupyter notebook source files
+notebooks/    Jupyter notebook source files (exploratory code)
 src/          Python source code
 
 README.md     This file
 env.yml       Main Conda environment (with OpenCV, etc)
 tess.yml      Conda environment for Tesseract
 ```
+
+Each `.md` file in `notebooks/` and `.py` file in `src/` has a brief
+description at the top of the file.
 
 ## Contributing
 

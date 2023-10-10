@@ -7,6 +7,8 @@ import pandas as pd
 import tomllib
 
 from .ops import rescale
+from datetime import date 
+
 
 from pathlib import Path
 import warnings
@@ -142,6 +144,8 @@ class FlyDatasetReader:
                 label_paths.append(p)
 
         self.label_paths = sorted(label_paths)
+
+        self.date = date.fromisoformat(data_dir.name.split('_', 1)[0])
 
         # Locate the Excel file.
         self.excel_paths = [

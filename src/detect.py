@@ -102,7 +102,6 @@ def main(config):
 
         result["id"] = range(1, len(result) + 1)
 
-
         # Option to save boxes as images.
         if is_debug:
             temp = result.loc[:, ['x_px', 'y_px', 'width_px', 'height_px']]
@@ -191,8 +190,6 @@ def main(config):
     else:
         results.to_csv(output_path, index = False)
     print(f"Wrote '{output_path}'")
-
-    #results.columns = [results.columns[-1]] + list(results.columns[:-1])
 
 
 def preprocess_image(image, shape = (384, 640)):

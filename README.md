@@ -281,6 +281,13 @@ description at the top of the file.
 
 ## Installation
 
+The fly detection tools are Unix command line tools, so some familiarity with
+the command line will make installing and using them easier. You can learn more
+about the Unix command line from DataLab's ["Introduction to the Unix Command
+Line][intro-cmd] workshop reader.
+
+[intro-cmd]: https://ucdavisdatalab.github.io/workshop_introduction_to_the_command_line/
+
 Make sure your computer has git installed. You can learn more about git from
 DataLab's ["Introduction to Version Control"][intro-vcs] workshop reader.
 

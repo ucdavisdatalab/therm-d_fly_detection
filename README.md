@@ -118,9 +118,10 @@ and `detect`, respectively).
 All of the command-line commands have only one argument: a path to a [TOML][]
 configuration file. TOML is a plain-text configuration file format designed to
 be easy to read and write. An example configuration file is provided in this
-repo at `configs/defaults.toml`. You can open and edit TOML files with a text
-editor such as [Notepad++][], [TextEdit][], or [nano][].
+repo at [`configs/defaults.toml`][defaults]. You can open and edit TOML files
+with a text editor such as [Notepad++][], [TextEdit][], or [nano][].
 
+[defaults]: configs/defaults.toml
 [TOML]: https://toml.io/
 [Notepad++]: https://notepad-plus-plus.org/
 [TextEdit]: https://support.apple.com/guide/textedit/welcome/mac
@@ -147,10 +148,15 @@ python -m src register configs/2023-07-19_biden.toml
 
 This will create an `arenas/` subdirectory in the data set directory. You can
 inspect the images in `arenas/` to check that the arenas were detected
-correctly. Arena detection typically fails if the registration marks are
-covered in the original photo or the original photo has poor brightness or
-contrast. As a failsafe, you can manually specify the pixel coordinates of the
-apparatus corners in the TOML configuration file.
+correctly.
+
+Arena detection typically fails if the registration marks are covered in the
+original photo or the original photo has poor brightness or contrast. As a
+failsafe, you can manually specify the pixel coordinates of the apparatus
+corners in the TOML configuration file with the `arena` setting. An example of
+this is provided in [`configs/2023-08-07_biden.toml`][manual-arena].
+
+[manual-arena]: configs/2023-08-07_biden.toml
 
 Next, you can run fly detection. In the terminal, run:
 
@@ -158,11 +164,41 @@ Next, you can run fly detection. In the terminal, run:
 python -m src detect configs/2023-07-19_biden.toml
 ```
 
-This will create a `predictions.csv` file in the data set directory. The format
-of this file is described in the following section.
+This will create a `predictions.csv` file and `predictions/` subdirectory in
+the data set directory. The `predictions/` subdirectory contains visualizations
+of the predicted flies as JPEG images (one for each arena image). The images
+show each detected fly's bounding box, an identification number (ID) for the
+box, and grid lines every 0.5 degrees Celsius.
+
+Note that box IDs is not linked across images, so box `1` for the first image
+in a data set does not necessarily enclose the same fly as box `1` for the
+second image. Box `id` is only provided as a way to easily remove incorrect
+boxes.
+
+The format of `predictions.csv` is described in the next section.
 
 
 ### Output Format
+
+The `predictions.csv` file created by the `detect` command has one row for each
+detected fly. The model detects a bounding box around each fly, so the columns
+contain data about the bounding box. The columns are:
+
+Column           | Description
+---------------- | -----------
+`id`             | identification number for the box (within the image)
+`x_px`           | x-coordinate of the box center, in pixels
+`y_px`           | y-coordinate of the box center, in pixels
+`width_px`       | width of the box, in pixels
+`height_px`      | height of the box, in pixels
+`confidence`     | confidence score for the box (from 0 lowest confidence to 1
+highest confidence)
+`path`           | file path to arena image
+`arena_width_px` | width of the arena, in pixels
+`arena_height_px`| height of the arena, in pixels
+`x_cm`           | x-coordinate of the box center, in centimeters
+`y_cm`           | y-coordinate of the box center, in centimeters
+`temperature`    | estimated temperature at the box center, in degrees Celsius
 
 
 ### Training the Model

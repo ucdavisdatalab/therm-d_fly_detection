@@ -191,8 +191,7 @@ Column           | Description
 `y_px`           | y-coordinate of the box center, in pixels
 `width_px`       | width of the box, in pixels
 `height_px`      | height of the box, in pixels
-`confidence`     | confidence score for the box (from 0 lowest confidence to 1
-highest confidence)
+`confidence`     | confidence score for the box (from 0 lowest confidence to 1 highest confidence)
 `path`           | file path to arena image
 `arena_width_px` | width of the arena, in pixels
 `arena_height_px`| height of the arena, in pixels

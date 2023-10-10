@@ -172,6 +172,15 @@ Column           | Description
 `y_cm`           | y-coordinate of the box center, in centimeters
 `temperature`    | estimated temperature at the box center, in degrees Celsius
 
+The file is a comma-separated values (CSV) file, which can be read and analyzed
+with data analysis software such as Excel, Tableau, Python, and R. The TOML
+config file also provides a setting to save the file in [Parquet][] format.
+Parquet is an open-standard for data exchange that provides [several
+benefits][benefits-parquet] over CSV files.
+
+[Parquet]: https://parquet.apache.org/
+[benefits-parquet]: https://ucdavisdatalab.github.io/workshop_reproducible_research/chapters/03_case_by_case_core.html#use-file-formats-effectively
+
 ([back to top][top])
 
 ### Training the Model
@@ -284,9 +293,18 @@ git clone git@github.com:datalab-dev/2023_project_hamada_fly.git
 ```
 
 Change directories to the cloned repo:
-```
+```sh
 cd 2023_project_hamada_fly/
 ```
+
+Next, create a `models/` subdirectory:
+```sh
+mkdir models
+```
+
+Go to the [Google Drive][google] and download the file
+`models/2023-08-25_fly-detection.onnx` to the `models/` subdirectory you just
+created.
 
 Make sure your computer has conda or mamba installed. You can learn more about
 these tools from [this section][conda-reader] of DataLab's "Making Python

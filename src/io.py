@@ -145,7 +145,7 @@ class FlyDatasetReader:
 
         self.label_paths = sorted(label_paths)
 
-        self.date = date.fromisoformat(data_dir.name.split('_', 1)[0])
+        self.date = date.fromisoformat(name_parts[0])
 
         # Locate the Excel file.
         self.excel_paths = [

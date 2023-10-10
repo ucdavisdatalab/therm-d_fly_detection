@@ -47,7 +47,7 @@ def prompt_overwrite(path, label, mkdir = False):
                "  Continue and possibly overwrite? [y/n] ")
     else:
         msg = (f"File '{path}' exists.\n"
-               "  Continue and possibly overwrite? [y/n]")
+               "  Continue and possibly overwrite? [y/n] ")
 
     if not prompt_yes(msg):
         sys.exit(1)

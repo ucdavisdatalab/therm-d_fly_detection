@@ -195,6 +195,7 @@ models/       Deep learning models for fly detection
 notebooks/    Jupyter notebook source files (exploratory code)
 src/          Python source code
 
+.gitignore    Settings file for git
 README.md     This file
 env.yml       Main Conda environment (with OpenCV, etc)
 tess.yml      Conda environment for Tesseract

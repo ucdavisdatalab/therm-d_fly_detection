@@ -1,17 +1,16 @@
 """This module handles reading and writing data.
 """
 
+from datetime import date
+from pathlib import Path
+import tomllib
+import warnings
+
 import cv2
 import numpy as np
 import pandas as pd
-import tomllib
 
 from .ops import rescale
-from datetime import date 
-
-
-from pathlib import Path
-import warnings
 
 
 def read_image(path, max_size = 0, grayscale = False):

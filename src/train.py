@@ -3,7 +3,6 @@
 
 from argparse import ArgumentParser
 from pathlib import Path
-import sys
 import tomllib
 
 import pandas as pd

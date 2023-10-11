@@ -1,10 +1,10 @@
 """Functions for detecting registration marks.
 """
 
+import itertools as it
+
 import cv2
 import numpy as np
-
-import itertools as it
 
 
 def orient_and_bound(alignment_mark, position_marks):

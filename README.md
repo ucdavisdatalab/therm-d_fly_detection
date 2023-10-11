@@ -191,7 +191,6 @@ The directories and files in this repository are:
 ```
 configs/      TOML configurations for commands
 data/         Data sets (files > 1MB go on Google Drive)
-docs/         Supporting documents
 models/       Deep learning models for fly detection
 notebooks/    Jupyter notebook source files (exploratory code)
 src/          Python source code
@@ -202,7 +201,8 @@ tess.yml      Conda environment for Tesseract
 ```
 
 Each `.md` file in `notebooks/` and `.py` file in `src/` has a brief
-description at the top of the file.
+description at the top of the file. The `data/` and `models/` directories are
+not included with the repo, but typically need to be created to use the tools.
 
 ([back to top][top])
 

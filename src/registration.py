@@ -97,7 +97,7 @@ def detect_arenas(image_set, config, debug_dir):
 
         print(f"  {rotation=}\n  {arena=}\n")
 
-        yield arena, rotation
+        yield path, img, arena, rotation
 
 
 def get_arenas(data, config):
@@ -133,20 +133,17 @@ def get_arenas(data, config):
         , "90 counterclockwise": cv2.ROTATE_90_COUNTERCLOCKWISE
     }[arena_config["rotate"]]
 
-    for _ in data:
-        yield arena, rotation
+    for path, image in data:
+        yield path, image, arena, rotation
 
 
-def rotate_images_with_arenas(image_set, arena_set):
+def rotate_images_with_arenas(arena_set):
     """Rotate images and arena bounds together.
 
     Arguments
     ---------
-    image_set: list of tuples
-        Images to rotate, as (path, image) pairs.
-
     arena_set: list of tuples
-        Arenas to rotate, as (arena, rotation) pairs.
+        Images and arenas to rotate, as (path, image, arena, rotation) tuples.
 
     Yields
     ------
@@ -155,7 +152,7 @@ def rotate_images_with_arenas(image_set, arena_set):
         matrix with columns x, y and rows top left, top right, bottom right,
         bottom left.
     """
-    for (path, image), (arena, rotation) in zip(image_set, arena_set):
+    for path, image, arena, rotation in arena_set:
         if rotation is not None:
             image = cv2.rotate(image, rotation)
             arena = ops.rotate_contour(arena, image.shape, rotation)

@@ -38,6 +38,7 @@ def register_arenas(config):
     output_dir = config.get("output_path", data_dir / "arenas")
     cli.prompt_overwrite(output_dir, "Output directory", mkdir = True)
 
+    debug_dir = None
     is_debug = config.get("debug", False)
     if is_debug:
         debug_dir = data_dir / "debug/arenas"
@@ -51,12 +52,11 @@ def register_arenas(config):
         arena_set = reg.get_arenas(image_set, config)
     else:
         # Detect arena coordinates.
-        arena_set = reg.detect_arenas(
-            image_set, config, debug_dir if is_debug else None)
+        arena_set = reg.detect_arenas(image_set, config, debug_dir)
 
     # Rotate images and arenas by specified/detected rotation.
-    image_set = reg.rotate_images_with_arenas(image_set, arena_set)
-    image_set, arenas = zip(*image_set)
+    arena_set = reg.rotate_images_with_arenas(arena_set)
+    image_set, arenas = zip(*arena_set)
 
     # Compute median arena position. No need to convert to int since the
     # perspective transformation requires float inputs.

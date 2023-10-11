@@ -1,10 +1,14 @@
 """Image transformations and operations that use Tesseract.
+
+Note: this file is outdated and NOT used by any of the fly detection tools.
+It's just here as a record of attempted methods.
 """
 
 import cv2
 import pytesseract as pyt
 
-import src.ops as ops
+from . import io
+from . import ops
 
 
 def orient_image(image):
@@ -40,3 +44,16 @@ def orient_image(image):
     }[rotate]
 
     return cv2.rotate(image, rotate)
+
+
+def main():
+    exp_dir = "data/2023-03-10_shiny"
+    dset = io.FlyDatasetReader(exp_dir)
+
+    for i in range(len(dset)):
+        img = dset.read_fly(i)
+        orient_image(img)
+
+
+if __name__ == "__main__":
+    main()

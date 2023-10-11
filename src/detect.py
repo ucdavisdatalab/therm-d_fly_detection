@@ -17,6 +17,9 @@ from . import viz
 
 
 def main(config):
+    """Use the fly detection model to detect flies for all images in a data
+    set.
+    """
     apparatuses = config["apparatuses"]
     config = config["detect"]
 
@@ -34,7 +37,7 @@ def main(config):
     output_path = Path(output_path)
     cli.prompt_overwrite(output_path, "Output path")
 
-    is_debug = config.get("debug", False) 
+    is_debug = config.get("debug", False)
     if is_debug:
         debug_dir = data_path / "debug/predictions"
         cli.prompt_overwrite(debug_dir, "Debug directory", mkdir = True)
@@ -97,10 +100,10 @@ def main(config):
         result = result.iloc[ix, :]
         print(f"  Kept {result.shape[0]} flies below {max_iou}"
               " maximum IoU.")
-        
-        results.append(result)
 
         result["id"] = range(1, len(result) + 1)
+
+        results.append(result)
 
         # Option to save boxes as images.
         if is_debug:
@@ -134,7 +137,7 @@ def main(config):
             mat = arr[:, indices_to_keep[0]]
             x_positions = mat[0]
             text_values = mat[1]
-            
+
             # Plot boxes and degree lines
             fig, ax = plt.subplots(1, 1, figsize = (20, 20))
             viz.plot_image(orig, ax = ax)
@@ -143,14 +146,16 @@ def main(config):
                 xc, yc, w, h = temp[i, :4]
                 viz.plot_box(
                     (yc - h / 2, xc - w / 2, yc + h / 2, xc + w / 2), ax)
-                ax.text(xc - w/2, yc + h/2, i + 1, ha='right', va='bottom'
-                        , fontsize = 'x-small', color = 'black')
+                ax.text(
+                    xc - w / 2, yc + h / 2, i + 1
+                    , ha='right', va='bottom', fontsize = 'x-small'
+                    , color = 'black')
 
             for x_pos, text_val in zip(x_positions, text_values):
                 ax.axvline(x=x_pos, color='r', linestyle='--', alpha = .15)
                 ax.text(
-                    x_pos, round(arena_h * .025), text_val, ha='right', va='bottom'
-                    , fontsize = 'small', color = 'b')
+                    x_pos, round(arena_h * .025), text_val
+                    , ha='right', va='bottom', fontsize = 'small', color = 'b')
 
             # Save into folder
             plt.savefig(debug_dir / img_name)
@@ -162,9 +167,9 @@ def main(config):
 
     column_names = results.columns
     id_col = results.iloc[:, -1]
-    results = results.drop(results.columns[-1], axis=1)
+    results = results.drop(results.columns[-1], axis = 1)
     results.insert(0, column_names[-1], id_col)
-    
+
     # Compute coordinates in centimeters, converting from pixels.
     apparatus = data.apparatus
     arena_w_cm = apparatuses[apparatus]["horizontal"]
@@ -194,6 +199,14 @@ def main(config):
 
 def preprocess_image(image, shape = (384, 640)):
     """Preprocess an image to prepare it for ONNX.
+
+    Arguments
+    ---------
+    image: np.ndarray
+        Image to preprocess.
+
+    shape: tuple of ints
+        Required image shape (height, width) for input to the model.
     """
     # Rescale and pad.
     image = ops.rescale(image, shape)

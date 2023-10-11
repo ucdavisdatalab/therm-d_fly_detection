@@ -200,7 +200,7 @@ src/          Python source code
 
 .gitignore    Settings file for git
 README.md     This file
-env.yml       Main Conda environment (with OpenCV, etc)
+fly.yml       Main Conda environment (with OpenCV, etc)
 tess.yml      Conda environment for Tesseract
 ```
 
@@ -257,7 +257,7 @@ Use conda or mamba to recreate the Python environment required by the fly
 detection tools:
 
 ```sh
-mamba env create --file env.yml
+mamba env create --file fly.yml
 ```
 
 This will create an environment named `fly`. Finally, activate the environment:

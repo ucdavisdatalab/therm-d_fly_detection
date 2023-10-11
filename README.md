@@ -90,10 +90,13 @@ and `detect`, respectively).
 All of the command-line commands have only one argument: a path to a [TOML][]
 configuration file. TOML is a plain-text configuration file format designed to
 be easy to read and write. An example configuration file is provided in this
-repo at [`configs/defaults.toml`][defaults]. You can open and edit TOML files
-with a text editor such as [Notepad++][], [TextEdit][], or [nano][].
+repo at [`configs/defaults.toml`][defaults]. A copy of the file with long-form
+documentation is provided in this repo at
+[`configs/defaults-long-comments.toml`][defaults-long]. You can open and edit
+TOML files with a text editor such as [Notepad++][], [TextEdit][], or [nano][].
 
 [defaults]: configs/defaults.toml
+[defaults-long]: configs/defaults-long-comments.toml
 [TOML]: https://toml.io/
 [Notepad++]: https://notepad-plus-plus.org/
 [TextEdit]: https://support.apple.com/guide/textedit/welcome/mac

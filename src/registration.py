@@ -9,6 +9,75 @@ import numpy as np
 from . import ops
 
 
+def register_rotate_arenas(dset, debug_dir):
+    """Detect arenas and rotate images to be right-side-up.
+    """
+    # Find the registration marks.
+    print("Finding registration marks...\n")
+
+    arenas = []
+    images = []
+    for path, img in dset.iter_read():
+        print(f"Image: '{path}'")
+
+        # Standardize brightness across images.
+        adj_img = ops.adaptive_gamma_correction(img)
+
+        hsv = cv2.cvtColor(adj_img, cv2.COLOR_RGB2HSV)[:, :, 1:]
+        qv = np.quantile(hsv[:, :, 1].ravel(), 0.45)
+
+        green_mask = mask_hsv(
+            adj_img, (70, 63, 95), (85, 255, 255), close_kernel = 21
+            , open_kernel = 7)
+        green_squares, _ = compute_squares(
+            green_mask, 3, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
+        if len(green_squares) < 3:
+            raise RuntimeError("Could not find 3 green registration marks"
+                               f" ({len(green_squares)} found).")
+
+        orange_mask = mask_hsv(
+            adj_img, (0, 95, qv), (15, 255, 255), close_kernel = 21
+            , open_kernel = 3)
+        orange_square, _ = compute_squares(
+            orange_mask, 1, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
+        if len(orange_square) != 1:
+            raise RuntimeError("Could not find orange registration mark.")
+
+        if debug_dir is not None:
+            # Save a diagnostic image.
+            preview = cv2.drawContours(
+                adj_img.copy(), green_squares, -1, (0, 255, 0), 3)
+            preview = cv2.drawContours(
+                preview, orange_square, -1, (255, 0, 0), 3)
+
+            debug_path = debug_dir / path.name
+            cv2.imwrite(str(debug_path), preview)
+            print(f"  Wrote '{debug_path}'.")
+
+        # Get orientation and arena bounds.
+        orient, arena = orient_and_bound(orange_square, green_squares)
+
+        # Orient the image and the arena.
+        if orient is not None:
+            img = cv2.rotate(img, orient)
+            arena = ops.rotate_contour(arena, img.shape, orient)
+
+        print(f"  {orient=}\n{arena=}\n")
+
+        images.append(img)
+        arenas.append(arena)
+
+    # Compute median arena position. No need to convert to int since the
+    # perspective transformation requires float inputs.
+    print("Computing median arena boundary...\n")
+
+    arenas = np.stack(arenas)
+    m_arena = np.median(arenas, axis = 0).reshape(-1, 2)
+    print(f"{m_arena=}")
+
+    return images, m_arena
+
+
 def register_arenas_manually(dset, config, output_dir):
     """Use an explicit configuration to rotate and crop arenas.
     """
@@ -29,6 +98,7 @@ def register_arenas_manually(dset, config, output_dir):
         case "90 counterclockwise":
             orient = cv2.ROTATE_90_COUNTERCLOCKWISE
 
+    images = []
     for path, img in dset.iter_read():
         print(f"Image: '{path}'")
 
@@ -36,18 +106,9 @@ def register_arenas_manually(dset, config, output_dir):
             img = cv2.rotate(img, orient)
             arena = ops.rotate_contour(arena, img.shape, orient)
 
-        transform, width, height = ops.get_perspective_transform(arena)
-        img = cv2.warpPerspective(
-            img, transform, (width, height), flags = cv2.INTER_CUBIC)
+        images.append(img)
 
-        img = ops.adaptive_gamma_correction(img)
-
-        # Save the new image.
-        output_path = output_dir / path.name
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        cv2.imwrite(str(output_path), img)
-        print(f"  Wrote '{output_path}'.")
-        print()
+    return images, arena
 
 
 def orient_and_bound(alignment_mark, position_marks):

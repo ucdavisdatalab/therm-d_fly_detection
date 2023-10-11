@@ -33,6 +33,23 @@ def detect_arenas(image_set, config, debug_dir):
     # Find the registration marks.
     print("Finding registration marks...\n")
 
+    # TODO: Expose these in TOML file.
+    green_hsv_lower = np.array([70, 63, 95], np.uint8)
+    green_v_quant = None
+    green_hsv_upper = np.array([85, 255, 255], np.uint8)
+    green_close = 21
+    green_open = 7
+    green_tol_aspect_ratio = 0.25
+    green_tol_rect_error = 0.2
+
+    orange_hsv_lower = np.array([0, 95, 0], np.uint8)
+    orange_v_quant = 0.45
+    orange_hsv_upper = np.array([15, 255, 255], np.uint8)
+    orange_close = 21
+    orange_open = 3
+    orange_tol_aspect_ratio = 0.25
+    orange_tol_rect_error = 0.2
+
     for path, img in image_set:
         print(f"Image: '{path}'")
 
@@ -40,22 +57,27 @@ def detect_arenas(image_set, config, debug_dir):
         adj_img = ops.adaptive_gamma_correction(img)
 
         hsv = cv2.cvtColor(adj_img, cv2.COLOR_RGB2HSV)[:, :, 1:]
-        qv = np.quantile(hsv[:, :, 1].ravel(), 0.45)
+        qv = np.quantile(hsv[:, :, 1].ravel(), orange_v_quant)
+        orange_hsv_lower[2] = qv
 
         green_mask = mask_hsv(
-            adj_img, (70, 63, 95), (85, 255, 255), close_kernel = 21
-            , open_kernel = 7)
+            adj_img, green_hsv_lower, green_hsv_upper
+            , close_kernel = green_close, open_kernel = green_open)
         green_squares, _ = compute_squares(
-            green_mask, 3, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
+            green_mask, 3
+            , tol_aspect_ratio = green_tol_aspect_ratio
+            , tol_rect_error = green_tol_rect_error)
         if len(green_squares) < 3:
             raise RuntimeError("Could not find 3 green registration marks"
                                f" ({len(green_squares)} found).")
 
         orange_mask = mask_hsv(
-            adj_img, (0, 95, qv), (15, 255, 255), close_kernel = 21
-            , open_kernel = 3)
+            adj_img, orange_hsv_lower, orange_hsv_upper
+            , close_kernel = orange_close, open_kernel = orange_open)
         orange_square, _ = compute_squares(
-            orange_mask, 1, tol_aspect_ratio = 0.25, tol_rect_error = 0.2)
+            orange_mask, 1
+            , tol_aspect_ratio = orange_tol_aspect_ratio
+            , tol_rect_error = orange_tol_rect_error)
         if len(orange_square) != 1:
             raise RuntimeError("Could not find orange registration mark.")
 

@@ -6,6 +6,49 @@ import itertools as it
 import cv2
 import numpy as np
 
+from . import ops
+
+
+def register_arenas_manually(dset, config, output_dir):
+    """Use an explicit configuration to rotate and crop arenas.
+    """
+    arena_config = config["arena"]
+    arena = np.array([
+        arena_config["top_left"]
+        , arena_config["top_right"]
+        , arena_config["bottom_right"]
+        , arena_config["bottom_left"]
+    ])
+
+    orient = None
+    match arena_config["rotate"]:
+        case "180":
+            orient = cv2.ROTATE_180
+        case "90 clockwise":
+            orient = cv2.ROTATE_90_CLOCKWISE
+        case "90 counterclockwise":
+            orient = cv2.ROTATE_90_COUNTERCLOCKWISE
+
+    for path, img in dset.iter_read():
+        print(f"Image: '{path}'")
+
+        if orient is not None:
+            img = cv2.rotate(img, orient)
+            arena = ops.rotate_contour(arena, img.shape, orient)
+
+        transform, width, height = ops.get_perspective_transform(arena)
+        img = cv2.warpPerspective(
+            img, transform, (width, height), flags = cv2.INTER_CUBIC)
+
+        img = ops.adaptive_gamma_correction(img)
+
+        # Save the new image.
+        output_path = output_dir / path.name
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        cv2.imwrite(str(output_path), img)
+        print(f"  Wrote '{output_path}'.")
+        print()
+
 
 def orient_and_bound(alignment_mark, position_marks):
     """Compute orientation and corners of a fly arena from its (orange)

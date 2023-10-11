@@ -1,10 +1,4 @@
 """Entry point for running the fly detection package on a data set.
-
-Currently, this module only runs step 1 of these steps:
-
-1. Orient and crop the fly images via registration marks.
-2. Detect the flies.
-3. Estimate the temperatures of the detected flies.
 """
 
 from argparse import ArgumentParser
@@ -51,45 +45,10 @@ def register_arenas(config):
         cli.prompt_overwrite(debug_dir, "Debug directory", mkdir = True)
     print()
 
-    # Do something a little different if config has an `arena` key.
     if "arena" in config:
-        arena_config = config["arena"]
-        arena = np.array([
-            arena_config["top_left"]
-            , arena_config["top_right"]
-            , arena_config["bottom_right"]
-            , arena_config["bottom_left"]
-        ])
-
-        orient = None
-        match arena_config["rotate"]:
-            case "180":
-                orient = cv2.ROTATE_180
-            case "90 clockwise":
-                orient = cv2.ROTATE_90_CLOCKWISE
-            case "90 counterclockwise":
-                orient = cv2.ROTATE_90_COUNTERCLOCKWISE
-
-        for path, img in dset.iter_read():
-            print(f"Image: '{path}'")
-
-            if orient is not None:
-                img = cv2.rotate(img, orient)
-                arena = ops.rotate_contour(arena, img.shape, orient)
-
-            transform, width, height = ops.get_perspective_transform(arena)
-            img = cv2.warpPerspective(
-                img, transform, (width, height), flags = cv2.INTER_CUBIC)
-
-            img = ops.adaptive_gamma_correction(img)
-
-            # Save the new image.
-            output_path = output_dir / path.name
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-            cv2.imwrite(str(output_path), img)
-            print(f"  Wrote '{output_path}'.")
-            print()
-
+        # Manually rotate and crop the arenas.
+        reg.register_arenas_manually(dset, config, output_dir)
+        # Skip automatic arena registration.
         return
 
     # Find the registration marks.

@@ -201,6 +201,7 @@ src/          Python source code
 .gitignore    Settings file for git
 README.md     This file
 fly.yml       Main Conda environment (with OpenCV, etc)
+fly-dev.yml   Conda environment for development
 tess.yml      Conda environment for Tesseract
 ```
 

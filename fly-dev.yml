@@ -1,0 +1,20 @@
+name: fly-dev
+channels:
+- conda-forge
+dependencies:
+- ipdb
+- ipython
+- jupyterlab
+- jupytext
+- matplotlib
+- numpy
+- onnxruntime
+- opencv
+- openpyxl
+- pandas
+- pillow
+- pyarrow
+- python
+- scikit-learn
+- seaborn
+

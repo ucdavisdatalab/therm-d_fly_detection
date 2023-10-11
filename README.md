@@ -247,10 +247,13 @@ created.
 
 Make sure your computer has conda or mamba installed. You can learn more about
 these tools from [this section][conda-reader] of DataLab's "Making Python
-Projects & Environments Reproducible" workshop reader. We recommend using mamba
-because it's generally faster, and we provide mamba commands below. If you're
-using conda, replace "mamba" with "conda" in the commands.
+Projects & Environments Reproducible" workshop reader. We recommend installing
+[miniforge][] (formerly known as "mambaforge") and using [mamba][] because it's
+generally faster, and we provide mamba commands below. If you're using conda,
+replace "mamba" with "conda" in the commands.
 
+[miniforge]: https://github.com/conda-forge/miniforge
+[mamba]: https://mamba.readthedocs.io/
 [conda-reader]: https://ucdavisdatalab.github.io/workshop_intermediate_python/chapters/02_reproducible.html#what-s-an-environment
 
 Use conda or mamba to recreate the Python environment required by the fly

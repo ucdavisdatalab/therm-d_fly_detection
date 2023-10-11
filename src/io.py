@@ -112,7 +112,7 @@ class FlyDatasetReader:
         arenas_dir = data_dir / "arenas"
         arena_paths = []
         if not arenas_dir.is_dir():
-            warnings.warn(f"Directory '{arenas_dir}' does not exist.")
+            print(f"Note: directory '{arenas_dir}' does not exist.")
         else:
             image_stems = [p.stem for p in paths]
             for p in arenas_dir.iterdir():
@@ -130,14 +130,14 @@ class FlyDatasetReader:
         labels_dir = data_dir / "labels"
         label_paths = []
         if not labels_dir.is_dir():
-            warnings.warn(f"Directory '{labels_dir}' does not exist.")
+            print(f"Note: directory '{labels_dir}' does not exist.")
         else:
             image_stems = [p.stem for p in paths]
             for p in labels_dir.iterdir():
                 if p.suffix.lower() not in (".txt"):
                     continue
                 # Check that the label corresponds to a photo.
-                if p.stem not in image_stems:
+                if p.stem not in image_stems and p.stem != "labels":
                     warnings.warn(f"No photo for label file '{p}'.")
                     continue
                 label_paths.append(p)

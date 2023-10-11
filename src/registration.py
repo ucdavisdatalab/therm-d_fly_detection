@@ -9,15 +9,31 @@ import numpy as np
 from . import ops
 
 
-def register_rotate_arenas(dset, debug_dir):
-    """Detect arenas and rotate images to be right-side-up.
+def detect_arenas(image_set, config, debug_dir):
+    """Detect arenas in images based on registration marks.
+
+    Arguments
+    ---------
+    image_set: list of tuples
+        Images in which to detect arenas, as (path, image) pairs.
+
+    config: dict
+        Configuration, as read from a TOML file.
+
+    debug_dir: Path or None
+        Path to debug directory if in debug mode, or None if not in debug mode.
+
+    Yields
+    ------
+    out: tuple
+        (arena, rotation) pairs; arena is a matrix with columns x, y and
+        rows top left, top right, bottom right, bottom left; rotation is an
+        OpenCV rotation code.
     """
     # Find the registration marks.
     print("Finding registration marks...\n")
 
-    arenas = []
-    images = []
-    for path, img in dset.iter_read():
+    for path, img in image_set:
         print(f"Image: '{path}'")
 
         # Standardize brightness across images.
@@ -54,32 +70,31 @@ def register_rotate_arenas(dset, debug_dir):
             cv2.imwrite(str(debug_path), preview)
             print(f"  Wrote '{debug_path}'.")
 
-        # Get orientation and arena bounds.
-        orient, arena = orient_and_bound(orange_square, green_squares)
+        # Get rotation and arena bounds.
+        rotation, arena = orient_and_bound(orange_square, green_squares)
 
-        # Orient the image and the arena.
-        if orient is not None:
-            img = cv2.rotate(img, orient)
-            arena = ops.rotate_contour(arena, img.shape, orient)
+        print(f"  {rotation=}\n  {arena=}\n")
 
-        print(f"  {orient=}\n{arena=}\n")
-
-        images.append(img)
-        arenas.append(arena)
-
-    # Compute median arena position. No need to convert to int since the
-    # perspective transformation requires float inputs.
-    print("Computing median arena boundary...\n")
-
-    arenas = np.stack(arenas)
-    m_arena = np.median(arenas, axis = 0).reshape(-1, 2)
-    print(f"{m_arena=}")
-
-    return images, m_arena
+        yield arena, rotation
 
 
-def register_arenas_manually(dset, config, output_dir):
-    """Use an explicit configuration to rotate and crop arenas.
+def get_arenas(data, config):
+    """Get arena and rotation info from a configuration.
+
+    Arguments
+    ---------
+    image_set: list of tuples
+        Images in which to detect arenas, as (path, image) pairs.
+
+    config: dict
+        Configuration, as read from a TOML file.
+
+    Yields
+    ------
+    out: tuple
+        (arena, rotation) pairs; arena is a matrix with columns x, y and
+        rows top left, top right, bottom right, bottom left; rotation is an
+        OpenCV rotation code.
     """
     arena_config = config["arena"]
     arena = np.array([
@@ -89,26 +104,40 @@ def register_arenas_manually(dset, config, output_dir):
         , arena_config["bottom_left"]
     ])
 
-    orient = None
-    match arena_config["rotate"]:
-        case "180":
-            orient = cv2.ROTATE_180
-        case "90 clockwise":
-            orient = cv2.ROTATE_90_CLOCKWISE
-        case "90 counterclockwise":
-            orient = cv2.ROTATE_90_COUNTERCLOCKWISE
+    rotation = {
+        "none": None
+        , "180": cv2.ROTATE_180
+        , "90 clockwise": cv2.ROTATE_90_CLOCKWISE
+        , "90 counterclockwise": cv2.ROTATE_90_COUNTERCLOCKWISE
+    }[arena_config["rotate"]]
 
-    images = []
-    for path, img in dset.iter_read():
-        print(f"Image: '{path}'")
+    for _ in data:
+        yield arena, rotation
 
-        if orient is not None:
-            img = cv2.rotate(img, orient)
-            arena = ops.rotate_contour(arena, img.shape, orient)
 
-        images.append(img)
+def rotate_images_with_arenas(image_set, arena_set):
+    """Rotate images and arena bounds together.
 
-    return images, arena
+    Arguments
+    ---------
+    image_set: list of tuples
+        Images to rotate, as (path, image) pairs.
+
+    arena_set: list of tuples
+        Arenas to rotate, as (arena, rotation) pairs.
+
+    Yields
+    ------
+    out: tuple
+        (image_set, arena) pairs; image_set is a (path, image) pair; arena is a
+        matrix with columns x, y and rows top left, top right, bottom right,
+        bottom left.
+    """
+    for (path, image), (arena, rotation) in zip(image_set, arena_set):
+        if rotation is not None:
+            image = cv2.rotate(image, rotation)
+            arena = ops.rotate_contour(arena, image.shape, rotation)
+        yield (path, image), arena
 
 
 def orient_and_bound(alignment_mark, position_marks):

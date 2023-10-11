@@ -45,28 +45,40 @@ def register_arenas(config):
         cli.prompt_overwrite(debug_dir, "Debug directory", mkdir = True)
     print()
 
-    if "arena" in config:
-        # Manually rotate and crop the arenas.
-        images, m_arena = reg.register_arenas_manually(dset, config, output_dir)
-    else:
-        images, m_arena = reg.register_rotate_arenas(
-            dset, debug_dir if is_debug else None)
+    image_set = dset.iter_read()
 
-    transform, width, height = ops.get_perspective_transform(m_arena)
+    if "arena" in config:
+        # Arena coordinates are specified in config.
+        arena_set = reg.get_arenas(image_set, config)
+    else:
+        # Detect arena coordinates.
+        arena_set = reg.detect_arenas(
+            image_set, config, debug_dir if is_debug else None)
+
+    # Rotate images and arenas by specified/detected rotation.
+    image_set = reg.rotate_images_with_arenas(image_set, arena_set)
+    image_set, arenas = zip(*image_set)
+
+    # Compute median arena position. No need to convert to int since the
+    # perspective transformation requires float inputs.
+    print("Computing median arena boundary...\n")
+
+    arenas = np.stack(arenas)
+    arena = np.median(arenas, axis = 0).reshape(-1, 2)
+    print(f"{arena=}")
+
+    transform, width, height = ops.get_perspective_transform(arena)
     print(f"{width=}, {height=}\n")
 
     # Extract and save the arenas.
-    print("Extracting and saving arenas...\n")
-
-    for path, img in zip(dset, images):
+    print("Cropping, gamma-adjusting, and saving arenas...\n")
+    for path, img in image_set:
         img = cv2.warpPerspective(
             img, transform, (width, height), flags = cv2.INTER_CUBIC)
 
-        #print(f"{path=}, {img.shape}")
         img = ops.adaptive_gamma_correction(img)
 
-        # Save the new image (or save metadata about the orientation and
-        # perspective).
+        # Save the cropped, gamma-adjusted image.
         output_path = output_dir / path.name
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         cv2.imwrite(str(output_path), img)

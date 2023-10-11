@@ -367,6 +367,10 @@ predictions from the current fly detection model.
 [template matching]: https://en.wikipedia.org/wiki/Template_matching
 [MakeSense]: https://www.makesense.ai/
 
+Before running template matching, create an `outputs/` subdirectory in the
+repo, then go to the [Google Drive][google] and download the file
+`outputs/fly_template.npz` to the subdirectory you just created.
+
 The command to run template matching is:
 
 ```sh

@@ -1,0 +1,115 @@
+# Lines that begin with `#` are comments and are ignored by the command line
+# tools.
+#
+# Settings have this format:
+#
+#   NAME = VALUE
+#
+# Numbers and true/false can be written as is, such as:
+#
+#   x = true
+#
+# All other values must be quoted:
+#
+#   name = "leia"
+#
+# Sections with settings for specific commands are marked with square brackets
+# `[ ]`, such as the `[register]` section below.
+#
+# For more about the TOML format, see <https://toml.io/>.
+
+# General settings (for all commands).
+
+# The path to the data set. This will automatically be used by all commands
+# unless you set `data_path` in the section for the
+data_path = "data/2023-07-19_biden"
+
+
+
+# Data about apparatuses. The names (`biden`, `shiny`, ...) must match the
+# apparatus names used for the data sets. Add new apparatuses here as needed.
+#
+# For each apparatus:
+#   * `horizontal` is the arena width in centimeters
+#   * `vertical` is the arena height in centimeters
+[apparatuses]
+biden = {horizontal = 28.6, vertical = 15.9}
+shiny = {horizontal = 28.6, vertical = 16.1}
+skywalker = {horizontal = 24, vertical = 16}
+elon = {horizontal = 28, vertical = 16}
+
+
+
+# Specific settings for the `register` command.
+[register]
+# Set this to set `data_path` for this command only.
+# data_path = "data/2023-07-19_biden"
+
+# Set this to change the default output path.
+# output_path = ""
+
+# Set this to enable debugging mode. In debugging mode, the command will
+# produce extra output (often visualizations) to help troubleshoot problems.
+# debug = true
+
+# Manual override for arena detection. Specify the (x, y) pixel coordinates of
+# the top left, top right, bottom right, and bottom left corners (the outside
+# corners of the registration stickers).
+# arena.top_left = [1218, 1407]
+# arena.top_right = [5439, 1416]
+# arena.bottom_right = [5418, 3753]
+# arena.bottom_left = [1245, 3756]
+
+# Manual override for arena rotation. Specify how the images should be rotated.
+# Options are "none", "90 clockwise", "180", and "90 counterclockwise".
+# Finer-grained resolution is handled automatically by the arena coordinates.
+# arena.rotate = "none"
+
+# NOTE: Either set all of the `arena` manual overrides or none of them. Setting
+# only a few will likely cause errors.
+
+
+
+# Specific settings for the `detect` command.
+[detect]
+# Path to the ONNX-format model. Change this if the model has a different name
+# or location.
+model_path = "models/2023-08-25_fly-detection.onnx"
+
+# Minimum confidence threshold for fly predictions (between 0.0 and 1.0).
+# Increasing this will make it less likely that non-flies are detected as
+# flies, but more likely that some flies are not detected.
+minimum_confidence = 0.01
+
+# Maximum threshold for intersection-over-union ratio of fly predictions
+# (between 0.0 and 1.0). Increasing this makes the model more likely to detect
+# tightly-clustered flies, but also more likely to detect a single fly as
+# multiple flies.
+maximum_iou = 0.25
+
+# Set this to output the predictions as a Parquet file rather than a CSV file.
+# as_parquet = true
+
+# Set this to set `data_path` for this command only.
+# data_path = "data/2023-08-11_shiny"
+
+# Set this to change the default output path.
+# output_path = ""
+
+# Set this to enable debugging mode. In debugging mode, the command will
+# produce extra output (often visualizations) to help troubleshoot problems.
+debug = true
+
+
+
+# Specific settings for the `match` command.
+[match]
+# Set this to set `data_path` for this command only.
+# data_path = "data/2023-07-19_biden"
+
+# Set this to change the default output path.
+# output_path = ""
+
+# Set this to enable debugging mode. In debugging mode, the command will
+# produce extra output (often visualizations) to help troubleshoot problems.
+# debug = true

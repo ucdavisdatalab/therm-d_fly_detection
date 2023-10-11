@@ -37,10 +37,8 @@ def main(config):
     output_path = Path(output_path)
     cli.prompt_overwrite(output_path, "Output path")
 
-    is_debug = config.get("debug", False)
-    if is_debug:
-        debug_dir = data_path / "debug/predictions"
-        cli.prompt_overwrite(debug_dir, "Debug directory", mkdir = True)
+    output_dir = config.get("output_dir", data_path / "predictions")
+    cli.prompt_overwrite(output_dir, "Output directory", mkdir = True)
 
     # Load the model.
     model = ort.InferenceSession(model_path)
@@ -48,6 +46,8 @@ def main(config):
     # Load the images and temperatures.
     data = io.FlyDatasetReader(data_path)
     temperature_table = data.read_sheet_temperatures()
+
+    print("\nDetecting flies...\n")
 
     # TODO: Can we just run with an entire list of images?
     # Apply the model to each image.
@@ -62,7 +62,6 @@ def main(config):
         padded_h, padded_w = image.shape[-2:]
 
         # Apply the model.
-        print("  Detecting flies...")
         result = model.run(None, {"images": image})
         result = result[0][0, :, :].transpose()
 
@@ -106,62 +105,61 @@ def main(config):
         results.append(result)
 
         # Option to save boxes as images.
-        if is_debug:
-            temp = result.loc[:, ['x_px', 'y_px', 'width_px', 'height_px']]
-            temp = temp.to_numpy()
-            img_name = path.name.rsplit("/", 1)[-1]
+        temp = result.loc[:, ['x_px', 'y_px', 'width_px', 'height_px']]
+        temp = temp.to_numpy()
+        img_name = path.name.rsplit("/", 1)[-1]
 
-            # Flip temperature table to iterate through every degree
+        # Flip temperature table to iterate through every degree
 
-            flipped = temperature_table[1, :]
-            flipped = np.vstack([flipped, temperature_table[0, :]])
+        flipped = temperature_table[1, :]
+        flipped = np.vstack([flipped, temperature_table[0, :]])
 
-            lb = int(flipped[0, 0])
-            ub = int(-(-flipped[0, -1] // 1))
+        lb = int(flipped[0, 0])
+        ub = int(-(-flipped[0, -1] // 1))
 
-            x_lines = []
-            degrees = []
+        x_lines = []
+        degrees = []
 
-            i = lb
-            while i <= ub:
-                x_lines.append(tmp.estimate(i, flipped))
-                degrees.append(i)
-                i += .5
+        i = lb
+        while i <= ub:
+            x_lines.append(tmp.estimate(i, flipped))
+            degrees.append(i)
+            i += .5
 
-            vert_lines = [
-                orig.shape[1] * i / apparatuses[data.apparatus]['horizontal']
-                for i in x_lines]
-            arr = np.array([vert_lines, degrees])
-            indices_to_keep = np.where(
-                (arr[0] >= 0) & (arr[0] <= orig.shape[1]))
-            mat = arr[:, indices_to_keep[0]]
-            x_positions = mat[0]
-            text_values = mat[1]
+        vert_lines = [
+            orig.shape[1] * i / apparatuses[data.apparatus]['horizontal']
+            for i in x_lines]
+        arr = np.array([vert_lines, degrees])
+        indices_to_keep = np.where(
+            (arr[0] >= 0) & (arr[0] <= orig.shape[1]))
+        mat = arr[:, indices_to_keep[0]]
+        x_positions = mat[0]
+        text_values = mat[1]
 
-            # Plot boxes and degree lines
-            fig, ax = plt.subplots(1, 1, figsize = (20, 20))
-            viz.plot_image(orig, ax = ax)
+        # Plot boxes and degree lines
+        fig, ax = plt.subplots(1, 1, figsize = (20, 20))
+        viz.plot_image(orig, ax = ax)
 
-            for i in range(temp.shape[0]):
-                xc, yc, w, h = temp[i, :4]
-                viz.plot_box(
-                    (yc - h / 2, xc - w / 2, yc + h / 2, xc + w / 2), ax)
-                ax.text(
-                    xc - w / 2, yc + h / 2, i + 1
-                    , ha='right', va='bottom', fontsize = 'x-small'
-                    , color = 'black')
+        for i in range(temp.shape[0]):
+            xc, yc, w, h = temp[i, :4]
+            viz.plot_box(
+                (yc - h / 2, xc - w / 2, yc + h / 2, xc + w / 2), ax)
+            ax.text(
+                xc - w / 2, yc + h / 2, i + 1
+                , ha='right', va='bottom', fontsize = 'x-small'
+                , color = 'black')
 
-            for x_pos, text_val in zip(x_positions, text_values):
-                ax.axvline(x=x_pos, color='r', linestyle='--', alpha = .15)
-                ax.text(
-                    x_pos, round(arena_h * .025), text_val
-                    , ha='right', va='bottom', fontsize = 'small', color = 'b')
+        for x_pos, text_val in zip(x_positions, text_values):
+            ax.axvline(x=x_pos, color='r', linestyle='--', alpha = .15)
+            ax.text(
+                x_pos, round(arena_h * .025), text_val
+                , ha='right', va='bottom', fontsize = 'small', color = 'b')
 
-            # Save into folder
-            plt.savefig(debug_dir / img_name)
-            plt.close()
-            print(f"  Wrote '{debug_dir / img_name}'")
-            print()
+        # Save into folder
+        plt.savefig(output_dir / img_name)
+        plt.close()
+        print(f"  Wrote '{output_dir / img_name}'")
+        print()
 
     results = pd.concat(results)
 

@@ -3,6 +3,7 @@
 # Ignore these unless you're trying to train a fly detection model.
 name = "yolo_test"
 
+
 [assemble]
 data_dir = "data/"
 datasets = [
@@ -16,6 +17,7 @@ datasets = [
 test_size = 0.2
 seed = 1931
 #out_dir = "outputs/training"
+
 
 [train]
 pretrain_path = "models/yolov8x.pt"

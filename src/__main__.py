@@ -35,8 +35,7 @@ def register_arenas(config):
     print(f"  Found {len(dset)} images.\n")
 
     # Make sure the output directory exists.
-    output_dir = config.get(
-        "output_path", data_dir / "arenas")
+    output_dir = config.get("output_path", data_dir / "arenas")
     cli.prompt_overwrite(output_dir, "Output directory", mkdir = True)
 
     is_debug = config.get("debug", False)
@@ -105,8 +104,7 @@ def match_flies(config):
     print(f"  Found {len(dset)} images.\n")
 
     # Make sure the output directory exists.
-    output_dir = config.get(
-        "output_path", data_dir / "match_labels")
+    output_dir = config.get("output_path", data_dir / "match_labels")
     cli.prompt_overwrite(output_dir, "Output directory", mkdir = True)
 
     is_debug = config.get("debug", False)

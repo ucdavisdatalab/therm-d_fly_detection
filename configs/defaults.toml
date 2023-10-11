@@ -39,9 +39,11 @@ maximum_iou = 0.25
 # Save predictions as a Parquet file rather than a CSV file.
 # as_parquet = true
 
-# data_path = "data/2023-08-11_shiny"
+# data_path = "data/2023-08-11_shiny/predictions.csv"
 # output_path = ""
-debug = true
+
+# Path to directory to save prediction images.
+# output_dir = ""
 
 
 [match]

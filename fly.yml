@@ -2,16 +2,13 @@ name: fly
 channels:
 - conda-forge
 dependencies:
-- ipython
-- jupyterlab
-- jupytext
 - matplotlib
 - numpy
 - onnxruntime
 - opencv
 - openpyxl
 - pandas
-- pillow
 - pyarrow
 - python
+- pyyaml
 - scikit-learn

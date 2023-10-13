@@ -386,8 +386,9 @@ in order to use the fly detection tools described above. That said, if new
 annotated data becomes available, additional training may improve accuracy.
 
 The model is a [You Only Look Once (YOLO) v8][yolo] object detection model. It
-was trained on the UC Davis [Farm Cluster][farm]. The node has 64 CPUs, 256GB
-RAM, and a NVIDIA A100 GPU. Training for 200 epochs took approximately 2 hours. 
+was trained on the UC Davis [Farm Cluster][farm]. The node used has 2 AMD EPYC
+7713 64-core CPUs, 1TB RAM, and a NVIDIA A100 GPU. Training for 200 epochs took
+approximately 2 hours.
 
 [yolo]: https://github.com/ultralytics/ultralytics/
 [farm]: https://www.hpc.ucdavis.edu/clusters

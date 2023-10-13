@@ -214,30 +214,58 @@ not included with the repo, but typically need to be created to use the tools.
 
 ## Installation
 
-The fly detection tools are Unix command line tools, so some familiarity with
-the command line will make installing and using them easier. You can learn more
-about the Unix command line from DataLab's ["Introduction to the Unix Command
-Line][intro-cmd] workshop reader.
+The fly detection tools can run on macOS, Windows, and Linux. They were
+developed and tested on macOS and Linux.
 
-[intro-cmd]: https://ucdavisdatalab.github.io/workshop_introduction_to_the_command_line/
+To get started, download a copy of this repository from GitHub to your
+computer. To do this, navigate to the [repo's main page][repo], click on the
+green "Code" button, and select "Download ZIP" from the menu. Pay attention to
+where you save the file. Once the download is complete, unzip the file.
 
-Make sure your computer has git installed. You can learn more about git from
-DataLab's ["Introduction to Version Control"][intro-vcs] workshop reader.
+[repo]: https://github.com/datalab-dev/2023_project_hamada_fly
+
+> [!NOTE]
+>
+> If you plan to *edit the code*, we recommend that you use git to download a
+> copy of the repo instead. You can learn more about git from these DataLab
+> workshop readers:
+> 
+> * [Introduction to Version Control][intro-vcs]
+> * [Reproducible Research for Teams with GitHub][intro-github]
+> 
+> If you've [configured git to connect to GitHub][github-ssh], you can use `git
+> clone` to download a copy of this repository to your computer:
+> 
+> ```sh
+> git clone git@github.com:datalab-dev/2023_project_hamada_fly.git
+> ```
+>
 
 [intro-vcs]: https://ucdavisdatalab.github.io/workshop_introduction_to_version_control/
+[intro-github]: https://ucdavisdatalab.github.io/workshop_git_for_teams/
+[github-ssh]: https://ucdavisdatalab.github.io/workshop_git_for_teams/setting-up-a-github-account.html#connecting-to-github-with-ssh
 
-Use `git clone` to copy this repository from GitHub to your computer:
+The fly detection tools provide a command line interface. Familiarity with the
+Unix command line will make it easier to follow the instructions in this README
+and to use the tools. You can learn more about the command line from DataLab's
+["Introduction to the Unix Command Line][intro-cmd] workshop reader. To access
+the Unix command line:
 
-```sh
-git clone git@github.com:datalab-dev/2023_project_hamada_fly.git
-```
+* **macOS**: use the built-in "Terminal" application.
+* **Windows**: install [git][] and use the "Git Bash" application. The built-in
+  "CMD.exe" application does NOT provide a Unix command line.
+* **Linux**: use any terminal application (for example, xterm).
 
-Change directories to the cloned repo:
+[intro-cmd]: https://ucdavisdatalab.github.io/workshop_introduction_to_the_command_line/
+[git]: https://git-scm.com/
+
+In your terminal, change directories to where you downloaded and unzipped the
+repo. Then change directories to the repo directory:
 ```sh
 cd 2023_project_hamada_fly/
 ```
 
-Next, create a `models/` subdirectory:
+Next, create a `models/` subdirectory to store model files:
 ```sh
 mkdir models
 ```
@@ -246,19 +274,24 @@ Go to the [Google Drive][google] and download the file
 `models/2023-08-25_fly-detection.onnx` to the `models/` subdirectory you just
 created.
 
-Make sure your computer has conda or mamba installed. You can learn more about
-these tools from [this section][conda-reader] of DataLab's "Making Python
-Projects & Environments Reproducible" workshop reader. We recommend installing
-[miniforge][] (formerly known as "mambaforge") and using [mamba][] because it's
-generally faster, and we provide mamba commands below. If you're using conda,
-replace "mamba" with "conda" in the commands.
+We recommend that you also create a `data/` subdirectory to store data sets:
+```sh
+mkdir data
+```
+
+To install Python and the Python packages necessary for the for the fly
+detection tools to run, we recommend using [mamba][]. You can install mamba by
+installing [miniforge][] (formerly known as "mambaforge"). If you already have
+conda installed, you can use that instead by replacing `mamba` with `conda` in
+the commands below. You can learn more about these tools from [this
+section][conda-reader] of DataLab's "Making Python Projects & Environments
+Reproducible" workshop reader. 
 
 [miniforge]: https://github.com/conda-forge/miniforge
 [mamba]: https://mamba.readthedocs.io/
 [conda-reader]: https://ucdavisdatalab.github.io/workshop_intermediate_python/chapters/02_reproducible.html#what-s-an-environment
 
-Use conda or mamba to recreate the Python environment required by the fly
-detection tools:
+To recreate the Python environment required by the fly detection tools, run:
 
 ```sh
 mamba env create --file fly.yml

@@ -1,10 +1,11 @@
+# Model Training Configuration
+# ----------------------------
+# Ignore this file unless you want to train the fly detection model.
+#
+# This configuration was used to train the fly models saved as
+# `pytorch_fly-model.tar.gz` in the Google Drive. The best model was also
+# converted to the `2023-08-25_fly-detection.onnx` file.
 name = "fly-model"
-
-[distance]
-biden = {horizontal = 28.6, vertical = 15.9}
-shiny = {horizontal = 28.6, vertical = 16.1}
-Skywalker = {horizontal = 24, vertical = 16}
-Elon = {horizontal = 28, vertical = 16}
 
 [assemble]
 data_dir = "outputs/"

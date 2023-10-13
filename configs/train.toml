@@ -1,6 +1,6 @@
 # Model Training Configuration
 # ----------------------------
-# Ignore these unless you're trying to train a fly detection model.
+# Ignore this file unless you want to train the fly detection model.
 name = "yolo_test"
 
 

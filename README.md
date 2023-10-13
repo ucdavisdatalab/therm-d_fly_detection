@@ -21,6 +21,8 @@ Contents:
     - [Output Format](#output-format)
 * [Directories and Files](#directories-and-files)
 * [Installation](#installation)
+    - [Download the Tools](#download-the-tools)
+    - [Set Up the Python Environment](#set-up-the-python-environment)
 * [Contributing](#contributing)
 * [Training the Model](#training-the-model)
 
@@ -280,6 +282,8 @@ We recommend that you also create a `data/` subdirectory to store data sets:
 ```sh
 mkdir data
 ```
+
+([back to top][top])
 
 ### Set Up the Python Environment
 

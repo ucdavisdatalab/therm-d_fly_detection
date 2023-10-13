@@ -178,10 +178,13 @@ Column           | Description
 `temperature`    | estimated temperature at the box center, in degrees Celsius
 
 The file is a comma-separated values (CSV) file, which can be read and analyzed
-with data analysis software such as Excel, Tableau, Python, and R. The TOML
-config file also provides a setting to save the file in [Parquet][] format.
-Parquet is an open-standard for data exchange that provides [several
-benefits][benefits-parquet] over CSV files.
+with data analysis software such as Excel, Tableau, Python, and R.
+
+> [!NOTE]
+>
+> The TOML config file also provides a setting to save the file in [Parquet][]
+> format. Parquet is an open-standard for data exchange that provides [several
+> benefits][benefits-parquet] over CSV files.
 
 [Parquet]: https://parquet.apache.org/
 [benefits-parquet]: https://ucdavisdatalab.github.io/workshop_reproducible_research/chapters/03_case_by_case_core.html#use-file-formats-effectively
@@ -319,7 +322,9 @@ Now you're ready to use the fly detection tools!
 
 ## Contributing
 
-_This section is about how to contribute notebooks to the repo._
+> [!IMPORTANT]
+>
+> This section is about how to contribute notebooks to the repo.
 
 Jupyter notebooks are stored in the repo in Markdown format (`.md`) via
 [Jupytext][]. This makes it easier to see changes to the notebooks in version
@@ -382,9 +387,11 @@ Jupytext extension for JupyterLab that can handle this process automatically.
 
 ## Training the Model
 
-The model has already been trained, so it is not necessary to train the model
-in order to use the fly detection tools described above. That said, if new
-annotated data becomes available, additional training may improve accuracy.
+> [!IMPORTANT]
+>
+> The model has already been trained, so it is not necessary to train the model
+> in order to use the fly detection tools described above. That said, if new
+> annotated data becomes available, additional training may improve accuracy.
 
 The model is a [You Only Look Once (YOLO) v8][yolo] object detection model. It
 was trained on the UC Davis [Farm Cluster][farm]. The node used has 2 AMD EPYC

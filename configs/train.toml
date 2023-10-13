@@ -1,11 +1,17 @@
 # Model Training Configuration
 # ----------------------------
 # Ignore this file unless you want to train the fly detection model.
+
+# Name of the model (used to name output directories and other files).
 name = "yolo_test"
 
 
 [assemble]
+# Path to the directory where data sets are stored (they must all be in the
+# same directory).
 data_dir = "data/"
+
+# Names of data sets to assemble.
 datasets = [
     "2023-07-12_biden"
   , "2023-07-19_biden"
@@ -14,13 +20,27 @@ datasets = [
   , "2023-07-26_shiny"
   , "2023-08-09_biden"
 ]
+
+# Proporsion of the data to hold out as a test set (from 0 to 1).
 test_size = 0.2
+
+# Seed value for the random number generator (change this each time the model
+# is trained on new data).
 seed = 1931
+
 #out_dir = "outputs/training"
 
 
 [train]
+# Path to the pretrained YOLO model.
 pretrain_path = "models/yolov8x.pt"
+
+# Path to the assembled data set.
 data_path = "outputs/yolo_test/yolo_test.yaml"
+
+# Number of epochs (complete passes over the data sets) to run.
 epochs = 10
+
+# Number of epochs to wait with no improvement in accuracy before ending
+# training early.
 patience = 20

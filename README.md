@@ -194,17 +194,18 @@ benefits][benefits-parquet] over CSV files.
 The directories and files in this repository are:
 
 ```
-configs/      TOML configurations for commands
-data/         Data sets (files > 1MB go on Google Drive)
-models/       Deep learning models for fly detection
-notebooks/    Jupyter notebook source files (exploratory code)
-src/          Python source code
+configs/        TOML configurations for commands
+data/           Data sets (files > 1MB go on Google Drive)
+models/         Deep learning models for fly detection
+notebooks/      Jupyter notebook source files (exploratory code)
+src/            Python source code
 
-.gitignore    Settings file for git
-README.md     This file
-fly.yml       Main Conda environment (with OpenCV, etc)
-fly-dev.yml   Conda environment for development
-tess.yml      Conda environment for Tesseract
+.gitignore      Settings file for git
+README.md       This file
+fly.yml         Main Conda environment (with OpenCV, etc)
+fly-dev.yml     Conda environment for development
+fly-train.yml   Conda environment for training the model.
+tess.yml        Conda environment for Tesseract
 ```
 
 Each `.md` file in `notebooks/` and `.py` file in `src/` has a brief

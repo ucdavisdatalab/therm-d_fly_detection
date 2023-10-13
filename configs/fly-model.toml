@@ -1,0 +1,28 @@
+name = "fly-model"
+
+[distance]
+biden = {horizontal = 28.6, vertical = 15.9}
+shiny = {horizontal = 28.6, vertical = 16.1}
+Skywalker = {horizontal = 24, vertical = 16}
+Elon = {horizontal = 28, vertical = 16}
+
+[assemble]
+data_dir = "outputs/"
+datasets = [
+    "2023-07-12_biden"
+  , "2023-07-19_biden"
+  , "2023-07-19_shiny"
+  , "2023-07-22_shiny"
+  , "2023-07-23_skywalker"
+  , "2023-07-26_shiny"
+  , "2023-08-09_biden"
+]
+test_size = 0.2
+seed = 1931
+#out_dir = "outputs/training"
+
+[train]
+pretrain_path = "models/yolov8x.pt"
+data_path = "outputs/fly-model/fly-model.yaml"
+epochs = 200
+patience = 20

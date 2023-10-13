@@ -217,6 +217,8 @@ not included with the repo, but typically need to be created to use the tools.
 The fly detection tools can run on macOS, Windows, and Linux. They were
 developed and tested on macOS and Linux.
 
+### Download the Tools
+
 To get started, download a copy of this repository from GitHub to your
 computer. To do this, navigate to the [repo's main page][repo], click on the
 green "Code" button, and select "Download ZIP" from the menu. Pay attention to
@@ -278,6 +280,8 @@ We recommend that you also create a `data/` subdirectory to store data sets:
 ```sh
 mkdir data
 ```
+
+### Set Up the Python Environment
 
 To install Python and the Python packages necessary for the for the fly
 detection tools to run, we recommend using [mamba][]. You can install mamba by

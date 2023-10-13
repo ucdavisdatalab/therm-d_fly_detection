@@ -1,0 +1,18 @@
+name: yolo
+channels:
+- conda-forge
+- pkgs/main
+- pytorch
+dependencies:
+- ipdb
+- ipython
+- jupyter
+- onnx
+- python
+- pytorch
+- pytorch-cuda=11.8
+- scikit-learn
+- torchaudio
+- torchvision
+- ultralytics
+

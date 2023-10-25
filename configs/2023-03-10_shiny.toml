@@ -1,0 +1,52 @@
+# The path to the data set, for all commands.
+data_path = "data/2023-03-10_shiny"
+
+
+# Apparatus arena width and arena height in centimeters.
+[apparatuses]
+biden = {horizontal = 28.6, vertical = 15.9}
+shiny = {horizontal = 28.6, vertical = 16.1}
+skywalker = {horizontal = 24, vertical = 16}
+elon = {horizontal = 28, vertical = 16}
+
+
+[register]
+#data_path = "data/2023-07-19_biden"
+# output_path = ""
+# debug = true
+
+# Manual override for arena detection.
+arena.top_left = [2541, 1887]
+arena.top_right = [552, 1900]
+arena.bottom_right = [549, 720]
+arena.bottom_left = [2559, 726]
+
+# Manual override for arena rotation.
+arena.rotate = "none"
+
+
+[detect]
+# Path to the ONNX-format model.
+model_path = "models/2023-08-25_fly-detection.onnx"
+
+# Minimum confidence threshold for fly predictions (between 0.0 and 1.0).
+minimum_confidence = 0.01
+
+# Maximum threshold for intersection-over-union ratio of fly predictions
+# (between 0.0 and 1.0).
+maximum_iou = 0.25
+
+# Save predictions as a Parquet file rather than a CSV file.
+# as_parquet = true
+
+#data_path = "data/2023-08-11_shiny"
+# output_path = ""
+
+# Path to directory to save prediction images.
+# output_dir = ""
+
+
+[match]
+#data_path = "data/2023-07-19_biden"
+# output_path = ""
+# debug = true

@@ -3,8 +3,15 @@
 
 # DataLab Project Directory Structure
 data/
+models/
 outputs/
+staging/
+
+*.jpeg
+*.jpg
 *.pdf
+*.png
+*.zip
 
 
 # R
